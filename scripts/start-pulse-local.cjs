@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * Start Pulse UI on http://localhost:8080 with current repo source (includes AISEO Polish menu).
- * WordPress Docker is optional: use dev:remote if neopulse.local is down.
+ * Start Pulse UI on http://localhost:8080 (Polish menu from src/).
+ * Picks /api target: neopulse.local when Docker/WP is up, else neodigital.ca.
  */
-const { spawn, spawnSync, execSync } = require("child_process");
+const { spawn, execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const { resolvePulseDevApiTarget, PRODUCTION_API_TARGET } = require("./resolve-pulse-dev-api.cjs");
 
 const REPO_ROOT = path.resolve(__dirname, "..");
-const LOCAL_CONFIG = path.join(REPO_ROOT, "scripts", "local-wp-staging.config.json");
 
 function gitShortSha() {
   try {
@@ -25,39 +25,53 @@ function hasPolishMenuSource() {
   return text.includes("content-polish") && text.includes("Polish");
 }
 
-const sha = gitShortSha();
-const polish = hasPolishMenuSource();
+async function main() {
+  const sha = gitShortSha();
+  const polish = hasPolishMenuSource();
 
-console.log("");
-console.log("=== Pulse local UI ===");
-console.log("git:", sha, polish ? "| Polish menu: YES in source" : "| Polish menu: MISSING — git pull origin main");
-console.log("");
-console.log("Open: http://localhost:8080/#generator");
-console.log("Then: Opt → AISEO → Content → Polish → Short");
-console.log("Flyout footer should show ui", sha.slice(0, 7));
-console.log("");
+  console.log("");
+  console.log("=== Pulse local UI ===");
+  console.log("git:", sha, polish ? "| Polish menu: YES" : "| Polish menu: MISSING — git pull origin main");
+  console.log("");
+  console.log("Open: http://localhost:8080/#generator");
+  console.log("Then: Opt → AISEO → Content → Polish → Short");
+  console.log("");
 
-const localWp = fs.existsSync(LOCAL_CONFIG);
-if (!localWp) {
-  console.log("No scripts/local-wp-staging.config.json — API will use production (dev:remote behavior).");
-  console.log("UI menu still works. For offline WP: start Docker + WP Staging, run npm run setup:local-wp");
-} else {
-  console.log("Local WP config found — Vite will proxy /api to neopulse.local when Docker site is up.");
-  console.log("If Docker is stopped, login may fail; use dev:remote or start WP Staging again.");
+  if (!polish) {
+    console.error("ERROR: This checkout does not contain the Polish menu. Run:");
+    console.error("  git fetch origin && git checkout main && git reset --hard origin/main");
+    process.exit(1);
+  }
+
+  const { target, mode } = await resolvePulseDevApiTarget();
+
+  if (mode === "local-wp") {
+    console.log("API: local WordPress at", target);
+  } else if (mode === "production-fallback") {
+    console.log("API: Docker/WP offline — using production", PRODUCTION_API_TARGET);
+    console.log("Sign in with your neodigital.ca account (e.g. pulse@neodigital.ca).");
+  } else {
+    console.log("API: production", target);
+  }
+  console.log("");
+
+  const env = {
+    ...process.env,
+    VITE_LOCAL_API_TARGET: target,
+    VITE_MCP_API_BASE: process.env.VITE_MCP_API_BASE || "/api/mcp",
+  };
+
+  const child = spawn("vite", [], {
+    cwd: REPO_ROOT,
+    stdio: "inherit",
+    shell: true,
+    env,
+  });
+
+  child.on("exit", (code) => process.exit(code ?? 0));
 }
-console.log("");
 
-if (!polish) {
-  console.error("ERROR: This checkout does not contain the Polish menu. Run:");
-  console.error("  git fetch origin && git checkout main && git pull origin main");
+main().catch((err) => {
+  console.error(err);
   process.exit(1);
-}
-
-const child = spawn("node", [path.join(__dirname, "dev-local.cjs")], {
-  cwd: REPO_ROOT,
-  stdio: "inherit",
-  shell: process.platform === "win32",
-  env: process.env,
 });
-
-child.on("exit", (code) => process.exit(code ?? 0));

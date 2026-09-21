@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/dev-local.cjs",
-    "dev:local": "node scripts/dev-local.cjs",
+    "dev": "node scripts/start-pulse-local.cjs",
+    "dev:local": "node scripts/start-pulse-local.cjs",
     "dev:remote": "node scripts/dev-remote.cjs",
     "pulse:local": "node scripts/start-pulse-local.cjs",
     "start": "node scripts/start-pulse-local.cjs",
