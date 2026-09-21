@@ -17,6 +17,7 @@ import type { OverviewTabController } from "@/hooks/overview/use-overview-tab-co
 export type OverviewBulkClusterContext = {
   hasDetectedSitemaps: boolean;
   bulkWorkspaceBusy: boolean;
+  articleStyle?: "standard" | "asap";
 };
 
 export type OverviewBulkClusterActionItem = {
@@ -205,6 +206,7 @@ export function buildOverviewBulkActionClusters(
                 optimizingSite ||
                 optimizingBatch,
               onSelect: () => void c.handleOptimizeAll(),
+              trailing: ctx.articleStyle === "asap" ? "ASAP" : undefined,
             },
           ]
         : []),
