@@ -1,4 +1,5 @@
 import { createRequire } from "module";
+import { execSync } from "child_process";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -11,8 +12,17 @@ const { resolveDevApiTarget, isLocalWpProxyTarget } = require("./scripts/resolve
 
 // https://vitejs.dev/config/
 // For WP Engine subdirectory deploy (e.g. neodigital.ca/app/): set VITE_BASE_PATH=/app/
+let localGitSha = "";
+try {
+  localGitSha = execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
+} catch {
+  localGitSha = "";
+}
 const deployGitSha =
-  process.env.RENDER_GIT_COMMIT || process.env.VERCEL_GIT_COMMIT_SHA || process.env.CF_PAGES_COMMIT_SHA || "";
+  process.env.RENDER_GIT_COMMIT ||
+  process.env.VERCEL_GIT_COMMIT_SHA ||
+  process.env.CF_PAGES_COMMIT_SHA ||
+  localGitSha;
 const isMobileApp = process.env.VITE_MOBILE_APP === "1";
 const openRouterApiKey =
   process.env.VITE_OPENROUTER_API_KEY ||
