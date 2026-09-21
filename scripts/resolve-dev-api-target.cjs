@@ -5,11 +5,16 @@ const REPO_ROOT = path.resolve(__dirname, "..");
 const LOCAL_CONFIG_PATH = path.join(REPO_ROOT, "scripts", "local-wp-staging.config.json");
 const PRODUCTION_API_TARGET = "https://neodigital.ca";
 
+function useLocalWpStack() {
+  const flag = (process.env.PULSE_LOCAL_WP || "").trim().toLowerCase();
+  return flag === "1" || flag === "true" || flag === "yes";
+}
+
 function resolveDevApiTarget() {
   const fromEnv = (process.env.VITE_LOCAL_API_TARGET || "").trim();
   if (fromEnv) return fromEnv;
 
-  if (fs.existsSync(LOCAL_CONFIG_PATH)) {
+  if (useLocalWpStack() && fs.existsSync(LOCAL_CONFIG_PATH)) {
     try {
       const config = JSON.parse(fs.readFileSync(LOCAL_CONFIG_PATH, "utf8"));
       const target = String(config.apiProxyTarget || config.siteUrl || "").trim();
@@ -35,4 +40,5 @@ module.exports = {
   PRODUCTION_API_TARGET,
   resolveDevApiTarget,
   isLocalWpProxyTarget,
+  useLocalWpStack,
 };
