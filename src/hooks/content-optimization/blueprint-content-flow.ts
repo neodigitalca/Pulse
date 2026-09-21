@@ -13,6 +13,7 @@ import { generateOptimizedBlueprint, generateAndUploadContent } from "@/lib/cont
 import { updateOptimizationProgress, patchOptimizationProgress } from "./optimization-helpers";
 import type { ContentOptimizerStepId } from "@/lib/content-optimization/content-optimizer-run-progress";
 import type { SemrushClusterScatterPlan } from "@/lib/semrush-cluster-scatter";
+import type { ArticleStyle } from "@/lib/content-generation/article-length-policy";
 
 export async function generateBlueprintFlow(
   selectedKeywords: string[],
@@ -40,6 +41,7 @@ export async function generateBlueprintFlow(
     anchorPhrases?: string[];
   },
   existingContent?: string,
+  articleStyle?: ArticleStyle,
 ): Promise<{ blueprintResult: any; checklist: string[] }> {
   if (testMode) {
     throw new Error("Test mode is not supported.");
@@ -71,6 +73,7 @@ export async function generateBlueprintFlow(
     hasEntityOverride,
     semrushForBlueprint,
     existingContent,
+    articleStyle,
   );
 
   return {

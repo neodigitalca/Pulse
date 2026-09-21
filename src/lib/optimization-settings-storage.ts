@@ -1,9 +1,18 @@
 import type { OptimizationSettings } from "@/components/integrations/wordpress/OptimizationSettingsPanel";
 import { DEFAULT_SETTINGS } from "@/components/integrations/wordpress/OptimizationSettingsPanel";
 import { DEFAULT_IMAGE_MODEL } from "@/lib/image-model-defaults";
+import type { ArticleStyle } from "@/lib/content-generation/article-length-policy";
 
 const SETTINGS_STORAGE_KEY_PREFIX = "optimization_settings_";
 const MODE_STORAGE_KEY_PREFIX = "optimization_mode_";
+const GENERATOR_ARTICLE_STYLE_KEY = "generator_article_style";
+
+function normalizeStoredArticleStyle(raw: string | null): ArticleStyle | null {
+  if (raw === "asap" || raw === "standard") return raw;
+  if (raw === "quick") return "asap";
+  if (raw === "full") return "standard";
+  return null;
+}
 
 export function getOptimizationSettings(siteId: string): OptimizationSettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
@@ -29,25 +38,55 @@ export function saveOptimizationSettings(siteId: string, settings: OptimizationS
   }
 }
 
-export function getOptimizationMode(siteId: string): 'quick' | 'standard' | 'full' {
-  if (typeof window === "undefined") return 'standard';
+export function getArticleStyle(siteId: string): ArticleStyle {
+  if (typeof window === "undefined") return "standard";
   try {
     const stored = localStorage.getItem(`${MODE_STORAGE_KEY_PREFIX}${siteId}`);
-    if (stored === 'quick' || stored === 'standard' || stored === 'full') {
-      return stored;
-    }
+    const normalized = normalizeStoredArticleStyle(stored);
+    if (normalized) return normalized;
   } catch (e) {
-    console.error('[OptimizationMode] Failed to parse stored mode:', e);
+    console.error("[ArticleStyle] Failed to parse stored style:", e);
   }
-  return 'standard';
+  return "standard";
 }
 
-export function saveOptimizationMode(siteId: string, mode: 'quick' | 'standard' | 'full'): void {
+export function saveArticleStyle(siteId: string, style: ArticleStyle): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(`${MODE_STORAGE_KEY_PREFIX}${siteId}`, mode);
+    localStorage.setItem(`${MODE_STORAGE_KEY_PREFIX}${siteId}`, style);
   } catch (e) {
-    console.error('[OptimizationMode] Failed to save mode:', e);
+    console.error("[ArticleStyle] Failed to save style:", e);
+  }
+}
+
+/** @deprecated Use getArticleStyle */
+export function getOptimizationMode(siteId: string): ArticleStyle {
+  return getArticleStyle(siteId);
+}
+
+/** @deprecated Use saveArticleStyle */
+export function saveOptimizationMode(siteId: string, mode: ArticleStyle): void {
+  saveArticleStyle(siteId, mode);
+}
+
+export function getGeneratorArticleStyle(): ArticleStyle {
+  if (typeof window === "undefined") return "standard";
+  try {
+    const stored = localStorage.getItem(GENERATOR_ARTICLE_STYLE_KEY);
+    const normalized = normalizeStoredArticleStyle(stored);
+    if (normalized) return normalized;
+  } catch (e) {
+    console.error("[GeneratorArticleStyle] Failed to parse stored style:", e);
+  }
+  return "standard";
+}
+
+export function saveGeneratorArticleStyle(style: ArticleStyle): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(GENERATOR_ARTICLE_STYLE_KEY, style);
+  } catch (e) {
+    console.error("[GeneratorArticleStyle] Failed to save style:", e);
   }
 }
 

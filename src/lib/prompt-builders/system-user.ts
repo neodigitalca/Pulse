@@ -1,7 +1,9 @@
 import {
   ARTICLE_MAX_WORDS,
+  buildAsapToneBlock,
   buildHarnessArticleBudgetBlock,
   buildHarnessArticleCapLine,
+  type ArticleStyle,
 } from "@/lib/content-generation/article-length-policy";
 import { INTERNAL_LINK_PLACEHOLDER_PROMPT_BLOCK } from "../content-generation/internal-link-placeholders";
 import { appendMasterInstructionsToSystemPrompt, ensureMasterInstructionsInMemory } from "../master-instructions-storage";
@@ -587,6 +589,11 @@ const HARNESS_SECTION_LENGTH_RULE_MARKDOWN = `**HARNESS LENGTH (mandatory)**:
 - Each paragraph: at most **3** sentences.
 - Forbidden: wire-style repetition of other blocks, full-release previews, or restating the whole thesis.`;
 
+const HARNESS_SECTION_LENGTH_RULE_MARKDOWN_ASAP = `**HARNESS LENGTH (mandatory)**:
+- Body prose in this section: at most **1** paragraph after the ## line (use **2** only when this block explicitly requires list/table-heavy content).
+- Each paragraph: at most **2** sentences.
+- Forbidden: filler intros, restating the thesis, or previewing other sections.`;
+
 const HARNESS_SECTION_SCOPE_RULE_MARKDOWN = `**HARNESS – SINGLE SECTION ONLY**:
 - Output exactly ONE section: the block under "Section to write". Start with that section's required ## heading as specified. Do NOT add any other top-level ## sections from the plan in this response.
 - Do not write a full article, article intro for the whole piece, or closing for the whole piece—only this section.
@@ -664,6 +671,8 @@ export const buildBulkHarnessSectionUserPrompt = (
   primaryKeyword?: string,
   /** Blog harness: ordered H2 titles for plan-only context (replaces full outline block). */
   allSectionTitles?: string[],
+  articleStyle: ArticleStyle = "standard",
+  articleMaxWords: number = ARTICLE_MAX_WORDS,
 ): string => {
   const normalizedSiteUrl = connectedSite?.siteUrl ? connectedSite.siteUrl.replace(/\/+$/, "") : "";
   const storedKeyword = (primaryKeyword ?? acfContext?.keywordFocus ?? "").trim();
@@ -771,11 +780,14 @@ No entity. General post; no locations or placeholders. ${ENTITY_FORBIDDEN}`;
   const formatLine =
     "Write in MARKDOWN ONLY for this section: ##, ###, paragraphs, [text](url), - lists, blockquotes (>). NEVER HTML.";
 
-  const lengthRule = HARNESS_SECTION_LENGTH_RULE_MARKDOWN;
+  const lengthRule =
+    articleStyle === "asap" && !isPressReleaseHarness
+      ? HARNESS_SECTION_LENGTH_RULE_MARKDOWN_ASAP
+      : HARNESS_SECTION_LENGTH_RULE_MARKDOWN;
 
   const articleBudgetBlock = isPressReleaseHarness
     ? ""
-    : buildHarnessArticleBudgetBlock(currentSectionIndex, totalSections);
+    : buildHarnessArticleBudgetBlock(currentSectionIndex, totalSections, articleMaxWords);
 
   const planOrOutlineBlock = h2PlanBlock
     ? h2PlanBlock
@@ -791,6 +803,7 @@ No entity. General post; no locations or placeholders. ${ENTITY_FORBIDDEN}`;
     scopeRule,
     FORBIDDEN_WORDS_USER_PROMPT_REMINDER,
     lengthRule,
+    articleStyle === "asap" && !isPressReleaseHarness ? buildAsapToneBlock() : "",
     articleBudgetBlock,
     keywordPunctuationBlock,
     formatLine,

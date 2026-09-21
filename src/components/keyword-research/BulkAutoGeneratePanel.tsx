@@ -52,6 +52,8 @@ import {
 } from '@/lib/bulk/bulk-sitemap-mode';
 import { cn } from '@/lib/utils';
 import { seedPromptBlogSlots, syncPromptBlogRowsToCount } from '@/lib/bulk/prompt-blog-slots';
+import type { ArticleStyle } from '@/lib/content-generation/article-length-policy';
+import { getGeneratorArticleStyle, saveGeneratorArticleStyle } from '@/lib/optimization-settings-storage';
 import { buildBulkBaseRows, identityRowOrder, allRowIndicesSet } from '@/lib/bulk-processing-order';
 interface BulkAutoGeneratePanelProps {
   openRouterApiKey?: string;
@@ -122,6 +124,9 @@ export const BulkAutoGeneratePanel: React.FC<BulkAutoGeneratePanelProps> = ({
   const [optionalPrompt, setOptionalPrompt] = useState<string>('');
   const [featuredImagePerBlog, setFeaturedImagePerBlog] = useState<boolean>(true);
   const [featuredImageType, setFeaturedImageType] = useState<'ai-generated' | 'google-maps'>('ai-generated');
+  const [generatorArticleStyle, setGeneratorArticleStyle] = useState<ArticleStyle>(() =>
+    getGeneratorArticleStyle(),
+  );
   const [generalIntent, setGeneralIntent] = useState<string>('');
   
   // Selection state for blog ideas
@@ -460,6 +465,7 @@ export const BulkAutoGeneratePanel: React.FC<BulkAutoGeneratePanelProps> = ({
     wordpressDraftOnly,
     blogImportSourceFile,
     blogImportForm,
+    articleStyle: generatorArticleStyle,
   });
 
   const bulkPreviewBuilt = useMemo(
@@ -878,6 +884,11 @@ export const BulkAutoGeneratePanel: React.FC<BulkAutoGeneratePanelProps> = ({
       setFeaturedImagePerBlog,
       featuredImageType,
       setFeaturedImageType,
+      generatorArticleStyle,
+      setGeneratorArticleStyle: (style: ArticleStyle) => {
+        setGeneratorArticleStyle(style);
+        saveGeneratorArticleStyle(style);
+      },
       filesByRow,
       failedRowIndices,
       failedRowMessages,

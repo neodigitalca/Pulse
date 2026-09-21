@@ -319,6 +319,10 @@ export async function generateAndUploadContent(
       shouldOptimizeContent,
       hasEntityOverride: optimizationOptions?.hasEntity,
       skipMetaDescriptionGeneration: !shouldOptimizeMeta,
+      optimizationOptions: {
+        articleStyle: opts.articleStyle,
+        hasEntity: optimizationOptions?.hasEntity,
+      },
       onHarnessSection: setOptimizationProgressRaw
         ? (payload) => {
             setOptimizationProgressRaw((prev: any) => {

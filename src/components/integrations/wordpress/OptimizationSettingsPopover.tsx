@@ -7,6 +7,8 @@ import { InContentImageGenerator } from './InContentImageGenerator';
 import type { ImageType } from '@/lib/image-section-analyzer';
 import { type WordPressSite } from '../types';
 import { useOptimizationOptions, type OptimizationOptions } from '@/hooks/use-optimization-options';
+import { ArticleStylePills } from '@/components/shared/ArticleStylePills';
+import { saveArticleStyle } from '@/lib/optimization-settings-storage';
 
 interface OptimizationSettingsAccordionProps {
   site: WordPressSite;
@@ -25,7 +27,7 @@ interface OptimizationSettingsAccordionProps {
 }
 
 export const OptimizationSettingsAccordion: React.FC<OptimizationSettingsAccordionProps> = ({
-  site: _site,
+  site,
   updateMode,
   optimizationOptions,
   onUpdateModeChange,
@@ -69,6 +71,8 @@ export const OptimizationSettingsAccordion: React.FC<OptimizationSettingsAccordi
     handleUseAcfKeywordChange,
     handleManualKeywordChange,
     handleBulkFaqMinimum4Change,
+    articleStyle,
+    handleArticleStyleChange,
   } = useOptimizationOptions({
     optimizationOptions,
     onOptimizationOptionsChange,
@@ -115,6 +119,17 @@ export const OptimizationSettingsAccordion: React.FC<OptimizationSettingsAccordi
         ) : null}
       </div>
       <div className="space-y-4 p-3">
+            <div className="space-y-2">
+              <span className="text-base font-medium text-foreground">Article style</span>
+              <ArticleStylePills
+                value={articleStyle}
+                onChange={(style) => {
+                  handleArticleStyleChange(style);
+                  saveArticleStyle(site.id, style);
+                }}
+                disabled={isDisabled}
+              />
+            </div>
             {/* bulk loadout cards */}
             <div className="space-y-2">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

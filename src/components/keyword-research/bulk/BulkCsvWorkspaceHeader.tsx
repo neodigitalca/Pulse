@@ -23,6 +23,8 @@ import {
 } from "@/components/keyword-research/bulk/bulk-workspace-header-styles";
 import type { MetaBulkMicroSnapshot } from "@/components/overview/OverviewBulkMicroProgress";
 import type { WordPressPostDestination } from "@/lib/bulk-auto-generate";
+import { ArticleStylePills } from "@/components/shared/ArticleStylePills";
+import type { ArticleStyle } from "@/lib/content-generation/article-length-policy";
 import {
   BULK_AUTO_GENERATE_TEMPLATE_FILENAME,
   BULK_AUTO_GENERATE_TEMPLATE_HREF,
@@ -55,6 +57,8 @@ export type BulkCsvWorkspaceHeaderProps = {
   sitemapMenu?: ReactNode;
   detailsProps: BulkGeneratorDetailsPanelProps;
   onDetailsOpenChange?: (open: boolean) => void;
+  generatorArticleStyle: ArticleStyle;
+  onGeneratorArticleStyleChange: (style: ArticleStyle) => void;
 };
 
 export function BulkCsvWorkspaceHeader({
@@ -79,6 +83,8 @@ export function BulkCsvWorkspaceHeader({
   sitemapMenu,
   detailsProps,
   onDetailsOpenChange,
+  generatorArticleStyle,
+  onGeneratorArticleStyleChange,
 }: BulkCsvWorkspaceHeaderProps) {
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -157,6 +163,11 @@ export function BulkCsvWorkspaceHeader({
           }
           options={
             <>
+              <ArticleStylePills
+                value={generatorArticleStyle}
+                onChange={onGeneratorArticleStyleChange}
+                disabled={workspaceBusy}
+              />
               <div className={BULK_TOOLBAR_GROUP_DIVIDER} aria-hidden />
               <Select
                 value={postDestination}

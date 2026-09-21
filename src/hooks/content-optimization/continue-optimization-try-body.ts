@@ -14,6 +14,8 @@ import { autoSelectOptimizationItems, performKeywordResearchFlow, updateKeywordR
 import { generateBlueprintFlow, generateAndUploadFlow } from "./blueprint-content-flow";
 import type { PendingOptimization } from "./use-optimization-state";
 import { getSeoResearchFromAcf } from "@/lib/content-generation/ai-driven-acf-reader";
+import { getArticleStyle } from "@/lib/optimization-settings-storage";
+import type { ArticleStyle } from "@/lib/content-generation/article-length-policy";
 
 export interface ContinueOptimizationTryBodyInput {
   siteId: string;
@@ -176,6 +178,11 @@ export async function runContinueOptimizationTryBody(input: ContinueOptimization
 
   updateOptimizationProgress(setOptimizationProgress, siteId, "plan", 0.65, "Building blueprint…");
 
+  const effectiveArticleStyle: ArticleStyle =
+    (finalOptimizationOptions?.articleStyle as ArticleStyle | undefined) ??
+    (optimizationOptions?.articleStyle as ArticleStyle | undefined) ??
+    getArticleStyle(site.id);
+
   const titleForBlueprint = pendingCleanedTitle || finalTitle || existingTitle;
   const { blueprintResult } = await generateBlueprintFlow(
     finalKwList,
@@ -198,6 +205,7 @@ export async function runContinueOptimizationTryBody(input: ContinueOptimization
     setOptimizationProgress,
     undefined,
     existingContent,
+    effectiveArticleStyle,
   );
 
   setOptimizationFileManagers((prev: Record<string, OptimizationFileManager>) => ({ ...prev, [siteId]: fileManager }));

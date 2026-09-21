@@ -27,6 +27,9 @@ import { BULK_TOOLBAR_GROUP_DIVIDER } from "@/components/keyword-research/bulk/b
 import type { OverviewTabController } from "@/hooks/overview/use-overview-tab-controller";
 import { useOverviewSiteWarmDetails } from "@/hooks/overview/use-overview-site-warm-details";
 import type { useWordPressOptimization } from "@/contexts/wordpress-optimization-context";
+import type { ArticleStyle } from "@/lib/content-generation/article-length-policy";
+import { getArticleStyle, saveArticleStyle } from "@/lib/optimization-settings-storage";
+import type { OptimizationOptions } from "@/hooks/use-optimization-options";
 import type { MetaBulkActionKey, BulkProgressSlice } from "@/components/overview/overview-tab-constants";
 import {
   OverviewContentDetailsPanel,
@@ -116,9 +119,28 @@ export function OverviewContentHeader({
   const warmDetails = useOverviewSiteWarmDetails(site);
   const workspaceBusy = metaOptBulkStripBusy || isBatchContentRunning || isSinglePageOptimizing;
 
+  const overviewArticleStyle: ArticleStyle = site
+    ? ((opt.optimizationOptions[site.id]?.articleStyle as ArticleStyle | undefined) ??
+      getArticleStyle(site.id))
+    : "standard";
+
+  const setOverviewArticleStyle = (style: ArticleStyle) => {
+    if (!site?.id) return;
+    saveArticleStyle(site.id, style);
+    opt.setOptimizationOptions((prev) => {
+      const current = prev[site.id] ?? ({} as OptimizationOptions);
+      return {
+        ...prev,
+        [site.id]: { ...current, articleStyle: style },
+      };
+    });
+  };
+
   const clusters = buildOverviewBulkActionClusters(c, {
     hasDetectedSitemaps,
     bulkWorkspaceBusy,
+    articleStyle: overviewArticleStyle,
+    onArticleStyleChange: setOverviewArticleStyle,
   });
 
   const singlePageCtx: OverviewSinglePageDetailsContext | undefined = site

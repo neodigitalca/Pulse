@@ -24,7 +24,7 @@ function trigger(conditions, match = "any", overrides = {}) {
   };
 }
 
-function action(keyword, title, executionKind, targetBucket, triggerConfig) {
+function action(keyword, title, executionKind, targetBucket, triggerConfig, executionPayloadExtra) {
   return {
     keyword,
     title,
@@ -32,7 +32,7 @@ function action(keyword, title, executionKind, targetBucket, triggerConfig) {
     assignPulse: true,
     scheduleMode: "trigger",
     executionKind,
-    executionPayload: { targetBucket, updateMode: "update" },
+    executionPayload: { targetBucket, updateMode: "update", ...executionPayloadExtra },
     triggerConfig,
   };
 }
@@ -94,6 +94,7 @@ const recipes = [
         "content_optimizer",
         "posts",
         trigger([{ signal: "ctr_drop", operator: "gte", value: 15, minImpressions: 100 }]),
+        { optimizationOptions: { articleStyle: "asap" } },
       ),
     ],
   },

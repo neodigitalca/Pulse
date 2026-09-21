@@ -27,7 +27,12 @@ import { countInternalLinksInMarkdown } from "@/lib/content-generation/ensure-li
 import type { BulkHarnessSectionPayload, BulkProcessingOptions } from "@/lib/bulk-auto-generate";
 import type { CSVRow } from "@/lib/bulk/bulk-csv-parser";
 import type { KeywordData } from "@/lib/keyword-types";
-import { buildFocusedArticlePurpose } from "@/lib/content-generation/article-length-policy";
+import {
+  buildFocusedArticlePurpose,
+  resolveArticleLengthPromptContext,
+  type ArticleStyle,
+} from "@/lib/content-generation/article-length-policy";
+import { getArticleStyle } from "@/lib/optimization-settings-storage";
 import { isGeneratedContentHtml } from "@/lib/content-generation/content-format";
 import { openRouterWebAppHeaders } from "@/lib/openrouter-attribution";
 
@@ -258,6 +263,7 @@ export interface ContentGeneratorOptions {
   skipMetaDescriptionGeneration?: boolean;
   /** Harness section lifecycle (same payload shape as bulk SAP/post gen). */
   onHarnessSection?: (payload: BulkHarnessSectionPayload) => void;
+  optimizationOptions?: { articleStyle?: ArticleStyle; hasEntity?: boolean };
 }
 
 export interface ContentGeneratorResult {
@@ -284,6 +290,7 @@ export async function generateOptimizedContent(
     hasEntityOverride,
     skipMetaDescriptionGeneration,
     onHarnessSection,
+    optimizationOptions,
   } = options;
 
   // Extract entity from blueprint result (if present)
@@ -439,6 +446,16 @@ export async function generateOptimizedContent(
       serpFeatures: [],
     };
 
+    const effectiveArticleStyle: ArticleStyle =
+      optimizationOptions?.articleStyle ?? getArticleStyle(site.id);
+    const { style: resolvedStyle, articleMaxWords } = resolveArticleLengthPromptContext(
+      effectiveArticleStyle,
+      {
+        existingContent: context.existingContent,
+        isServiceArea: Boolean(entity),
+      },
+    );
+
     const bulkHarnessOptions: BulkProcessingOptions = {
       apiKey: '',
       openRouterApiKey,
@@ -448,6 +465,8 @@ export async function generateOptimizedContent(
       topP: 0.9,
       useEntitySitemapTemplate: !!entity,
       portfolioBlockedHosts: context.portfolioBlockedHosts,
+      articleStyle: resolvedStyle,
+      articleMaxWords,
       onHarnessSection: onHarnessSection
         ? (payload) => {
             onHarnessSection(payload);

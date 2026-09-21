@@ -17,6 +17,8 @@ import type { OverviewTabController } from "@/hooks/overview/use-overview-tab-co
 export type OverviewBulkClusterContext = {
   hasDetectedSitemaps: boolean;
   bulkWorkspaceBusy: boolean;
+  articleStyle?: "standard" | "asap";
+  onArticleStyleChange?: (style: "standard" | "asap") => void;
 };
 
 export type OverviewBulkClusterActionItem = {
@@ -41,6 +43,23 @@ export type OverviewBulkClusterCheckboxItem = {
   onCheckedChange: (checked: boolean) => void;
 };
 
+export type OverviewBulkClusterSubmenuChild = {
+  id: string;
+  label: string;
+  disabled: boolean;
+  emphasize?: boolean;
+  onSelect: () => void;
+  closeOnSelect?: boolean;
+};
+
+export type OverviewBulkClusterSubmenuItem = {
+  kind: "submenu";
+  id: string;
+  label: string;
+  disabled: boolean;
+  children: OverviewBulkClusterSubmenuChild[];
+};
+
 export type OverviewBulkClusterSeparator = { kind: "separator"; id: string };
 
 export type OverviewBulkClusterCategory = { kind: "category"; id: string; label: string };
@@ -48,6 +67,7 @@ export type OverviewBulkClusterCategory = { kind: "category"; id: string; label:
 export type OverviewBulkClusterItem =
   | OverviewBulkClusterActionItem
   | OverviewBulkClusterCheckboxItem
+  | OverviewBulkClusterSubmenuItem
   | OverviewBulkClusterSeparator
   | OverviewBulkClusterCategory;
 
@@ -208,6 +228,33 @@ export function buildOverviewBulkActionClusters(
             },
           ]
         : []),
+      {
+        kind: "submenu" as const,
+        id: "content-polish",
+        label: "Polish",
+        disabled: !c.site || ctx.bulkWorkspaceBusy,
+        children: [
+          {
+            id: "polish-short",
+            label: "Short",
+            emphasize: ctx.articleStyle === "asap",
+            disabled:
+              !c.site ||
+              ctx.bulkWorkspaceBusy ||
+              (c.sitemapSource !== "pages" &&
+                (noRows(c) ||
+                  !!p.optimizeAll ||
+                  optimizingSite ||
+                  optimizingBatch)),
+            onSelect: () => {
+              ctx.onArticleStyleChange?.("asap");
+              if (c.sitemapSource !== "pages") {
+                void c.handleOptimizeAll({ articleStyle: "asap" });
+              }
+            },
+          },
+        ],
+      },
       {
         kind: "action",
         id: "bulk-seo-extra",

@@ -26,6 +26,8 @@ import type { BulkGeneratorDetailsPanelProps } from "@/components/keyword-resear
 import { BULK_HEADER_RUN_BTN } from "@/components/keyword-research/bulk/bulk-workspace-header-styles";
 import type { MetaBulkMicroSnapshot } from "@/components/overview/OverviewBulkMicroProgress";
 import type { WordPressPostDestination } from "@/lib/bulk-auto-generate";
+import { ArticleStylePills } from "@/components/shared/ArticleStylePills";
+import type { ArticleStyle } from "@/lib/content-generation/article-length-policy";
 
 const POST_DESTINATION_SHORT: Record<WordPressPostDestination, string> = {
   wordpress: "WordPress",
@@ -64,6 +66,8 @@ export type BulkPromptWorkspaceHeaderProps = {
   sitemapMenu?: ReactNode;
   detailsProps: BulkGeneratorDetailsPanelProps;
   onDetailsOpenChange?: (open: boolean) => void;
+  generatorArticleStyle: ArticleStyle;
+  onGeneratorArticleStyleChange: (style: ArticleStyle) => void;
 };
 
 export function BulkPromptWorkspaceHeader({
@@ -96,6 +100,8 @@ export function BulkPromptWorkspaceHeader({
   sitemapMenu,
   detailsProps,
   onDetailsOpenChange,
+  generatorArticleStyle,
+  onGeneratorArticleStyleChange,
 }: BulkPromptWorkspaceHeaderProps) {
   const featuredImageMode: FeaturedImageMode = featuredImagePerBlog ? featuredImageType : "off";
 
@@ -176,6 +182,14 @@ export function BulkPromptWorkspaceHeader({
                       disabled={workspaceBusy}
                       autoComplete="off"
                       aria-label="Optional prompt modifier"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-base font-medium text-foreground">Article style</span>
+                    <ArticleStylePills
+                      value={generatorArticleStyle}
+                      onChange={onGeneratorArticleStyleChange}
+                      disabled={workspaceBusy}
                     />
                   </div>
                   <div className="space-y-1.5">

@@ -6,6 +6,7 @@ import type { ConnectedSiteSummary } from "@/components/integrations/types";
 import type { ScheduleOccupancy } from "@/lib/bulk-schedule-gap";
 import type { ScheduleFrequency } from "@/lib/wordpress-scheduler";
 import type { BulkRowSitemapType, BulkSitemapMode } from "@/lib/bulk/bulk-sitemap-mode";
+import type { ArticleStyle } from "@/lib/content-generation/article-length-policy";
 
 interface SiteConfig {
   sitemapType: BulkSitemapMode;
@@ -81,6 +82,8 @@ export type BulkGeneratorWorkspaceBindings = {
   setFeaturedImagePerBlog: (value: boolean) => void;
   featuredImageType: "ai-generated" | "google-maps";
   setFeaturedImageType: (value: "ai-generated" | "google-maps") => void;
+  generatorArticleStyle: ArticleStyle;
+  setGeneratorArticleStyle: (value: ArticleStyle) => void;
   filesByRow: Map<number, BulkGeneratedFile[]>;
   failedRowIndices: ReadonlySet<number>;
   failedRowMessages: Readonly<Record<number, string>>;

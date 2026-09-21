@@ -25,8 +25,14 @@ import {
 } from "@/lib/bulk/blog-import-tone";
 import {
   ARTICLE_MAX_WORDS,
+  MAX_CHECKLIST_ITEMS_BLOG,
+  MAX_CHECKLIST_ITEMS_BLOG_ASAP,
+  MAX_CHECKLIST_ITEMS_SAP,
+  MAX_CHECKLIST_ITEMS_SAP_ASAP,
   buildArticleLengthChecklistBlock,
   buildBlueprintArticleLengthBlock,
+  resolveArticleLengthPromptContext,
+  type ArticleStyle,
 } from "@/lib/content-generation/article-length-policy";
 import {
   INTERNAL_LINK_PLACEHOLDER_FEATURE_SUFFIX,
@@ -605,6 +611,10 @@ export async function generateChecklistFromSelections(
     prefilledRowContract?: string;
     /** Row-only external links (modifier_links_json + imported_links_json). */
     userExternalLinks?: ExternalLinkPair[];
+    articleStyle?: ArticleStyle;
+    articleMaxWords?: number;
+    /** Content optimization: scale ASAP word cap from existing body. */
+    existingContent?: string;
   }
 ): Promise<string[]> {
   const {
@@ -614,6 +624,28 @@ export async function generateChecklistFromSelections(
     maxTokens = 4000,
     topP = 0.9,
   } = options;
+
+  const lengthCtx = resolveArticleLengthPromptContext(options.articleStyle, {
+    existingContent: options.existingContent,
+    isServiceArea: Boolean(options.entity?.trim()),
+  });
+  const articleStyle = lengthCtx.style;
+  const articleMaxWords = options.articleMaxWords ?? lengthCtx.articleMaxWords;
+  const checklistHardCap = options.entity?.trim()
+    ? articleStyle === "asap"
+      ? MAX_CHECKLIST_ITEMS_SAP_ASAP
+      : MAX_CHECKLIST_ITEMS_SAP
+    : articleStyle === "asap"
+      ? MAX_CHECKLIST_ITEMS_BLOG_ASAP
+      : MAX_CHECKLIST_ITEMS_BLOG;
+  const checklistCountLabel = options.entity?.trim()
+    ? articleStyle === "asap"
+      ? "3-4"
+      : "6-7"
+    : articleStyle === "asap"
+      ? "2-3"
+      : "5-6";
+  const tableBudgetChecklist = articleStyle === "asap" ? 1 : 2;
 
   const resolvedCheckedLinks = options.checkedExternalLinks;
   const optionsWithCheckedLinks = resolvedCheckedLinks?.length
@@ -1145,14 +1177,14 @@ CRITICAL: Use natural, conversational language - avoid stuffing one paragraph. *
 ${title}
 ${importedToneSection}${importedLinksSection}${modifierLinksSection}${verbatimImportedH2Section}${verbatimQuestionH2Section}${targetSiteContext}${wordPressPostsContext}${currentPageContext}${h2Section}${paaSection}${researchLinksSection}${userPromptSection}${prefilledRowContractSection}${entityContext}${serpDataContext}${semrushKeywordsContextBlock}${semrushScatterContextBlock}${semrushParts.semrushExactBlock}
 
-${buildArticleLengthChecklistBlock(!!options.entity)}
+${buildArticleLengthChecklistBlock(!!options.entity, articleStyle, articleMaxWords)}
 
-Create a checklist (5-6 items for blog, 6-7 for service area SAP) based on selected H2 sections. Each item must include:
+Create a checklist (${checklistCountLabel} items for blog, 6-7 for service area SAP) based on selected H2 sections. Each item must include:
 
 **Harness contract (mandatory)**:
-- Each checklist item becomes **exactly one H2** written in a **separate harness pass**. State: "Output is ONLY this H2 block (~${Math.floor(ARTICLE_MAX_WORDS / 6)} words)." **Never** instruct writing other H2 sections in the same pass.
+- Each checklist item becomes **exactly one H2** written in a **separate harness pass**. State: "Output is ONLY this H2 block (~${Math.floor(articleMaxWords / checklistHardCap)} words)." **Never** instruct writing other H2 sections in the same pass.
 - **No duplicate H2 titles** and **no duplicate topics** (merge overlapping service/location sections into one H2).
-- Entire article: **at most 2** [TABLE] items across all checklist lines—not every section gets a table.
+- Entire article: **at most ${tableBudgetChecklist}** [TABLE] item(s) across all checklist lines—not every section gets a table.
 
 **Structure** (SEO HIERARCHY MANDATORY):
 - H2 = main section titles ONLY. H3 = subsections under H2. H4 = sub-subsections. NEVER use H3 for a main section.
@@ -1233,7 +1265,7 @@ Output ONLY the numbered checklist items, no additional text or explanations.`;
 
   let userPrompt = `Generate a focused checklist for creating a blog template blueprint.
 
-${buildArticleLengthChecklistBlock(isServiceArea)}
+${buildArticleLengthChecklistBlock(isServiceArea, articleStyle, articleMaxWords)}
 
 CRITICAL: Weave keywords elegantly into content using natural, human-like syntax. Keywords should flow organically within sentences. **Focus keyword**: The checklist MUST state **[FOCUS KEYWORD DENSITY]**: **minimum ~1.0%** focus keyword density (exact phrase + counted combinations), **not ~0.5%** - distribute across the article. **EXACT PRIMARY PER H2**: The checklist MUST state that the **exact** Primary Keyword phrase appears **at least once in the body of every H2** (intro, each topic H2, conclusion, mandatory H2s). Use semantic variations where they help readability; if a phrase feels forced in one spot, place the **exact** primary phrase in another sentence within that same H2.
 
@@ -1455,6 +1487,10 @@ export async function generateBlueprintFromTemplate(
     userExternalLinks?: ExternalLinkPair[];
     wikipediaUrl?: string;
     wikipediaTitle?: string;
+    articleStyle?: ArticleStyle;
+    articleMaxWords?: number;
+    existingContent?: string;
+    entity?: string;
   }
 ): Promise<{ title?: string; purpose?: string; agents: AgentConfig[] }> {
   const {
@@ -1464,6 +1500,13 @@ export async function generateBlueprintFromTemplate(
     maxTokens = 8000,
     topP = 0.9,
   } = options;
+
+  const blueprintLength = resolveArticleLengthPromptContext(options.articleStyle, {
+    existingContent: options.existingContent,
+    isServiceArea: Boolean(options.entity?.trim()),
+  });
+  const blueprintArticleStyle = blueprintLength.style;
+  const blueprintArticleMaxWords = options.articleMaxWords ?? blueprintLength.articleMaxWords;
 
   const userPromptSection = context.userPrompt && context.userPrompt.trim()
     ? `\n--- PROMPT MODIFIER (PRIMARY FOCUS FOR THIS BLOG) ---
@@ -1682,7 +1725,7 @@ ${targetSiteContext}${wordPressPostsContext}${currentPageContextForBlueprint}${u
 --- Template Checklist ---
 ${checklist.map((item, index) => `${index + 1}. ${item}`).join("\n")}
 
-${buildBlueprintArticleLengthBlock()}
+${buildBlueprintArticleLengthBlock(blueprintArticleStyle, blueprintArticleMaxWords)}
 
 --- Your Task ---
 Generate a complete blueprint JSON structure with:
@@ -1690,7 +1733,7 @@ Generate a complete blueprint JSON structure with:
    ${entityTitleRule}   *** ENTITY PAGES: NON-NEGOTIABLE *** When the checklist mentions entity, location, "We Care About", or service area: The word "near" MUST appear in the title (e.g. "Blinds & Shades Near Ben Hill Atlanta"). No colons in titles. If your title does not contain "near", it is WRONG.
    ${blueprintTitleLengthRule}
 ${context.userPrompt && context.userPrompt.trim() ? `   **TITLE MUST REFLECT USER REQUIREMENTS**: If User Requirements (Prompt Modifier) specify a theme or focus (e.g. "creative structures only"), the article title MUST reflect that theme (e.g. reference the focus or structural angle). Do not output a generic title that ignores the User Requirements.` : ""}
-2. A concise "purpose" description (frame as a focused guide, max ${ARTICLE_MAX_WORDS} words)
+2. A concise "purpose" description (frame as a focused guide, max ${blueprintArticleMaxWords} words)
 3. An "agents" array with one agent per checklist item; never exceed the checklist item count; prefer fewer agents with combined subtopics over splitting
 
 --- CRITICAL: INTERPRETING CHECKLIST ITEMS ---

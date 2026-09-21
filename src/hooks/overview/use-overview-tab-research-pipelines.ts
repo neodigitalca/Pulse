@@ -41,6 +41,8 @@ import {
   getBulkInventorySessionSnapshot,
 } from "@/lib/wordpress-bulk-inventory-session-cache";
 import { overviewBulkPageRanges } from "@/lib/overview/overview-bulk-page-size";
+import { getArticleStyle } from "@/lib/optimization-settings-storage";
+import type { ArticleStyle } from "@/lib/content-generation/article-length-policy";
 import { setOverviewBulkHarnessPageState } from "@/lib/overview/overview-bulk-page-state";
 import {
   overviewBulkRowEntries,
@@ -393,7 +395,7 @@ export function useOverviewTabResearchPipelines({
 
   const handleResearchAll = runResearchAll;
 
-  const handleOptimizeAll = useCallback(async () => {
+  const handleOptimizeAll = useCallback(async (runOptions?: { articleStyle?: ArticleStyle }) => {
     if (!site) {
       notify.error(NOTIFY_CONNECT_A_WORDPRESS_SITE_FIRST_IN_THE_IN);
       return;
@@ -486,6 +488,10 @@ export function useOverviewTabResearchPipelines({
           inventorySitemapSource: sitemapSource,
           prefilledOverviewTargets,
           prefilledUrlKeywords,
+          articleStyle:
+            runOptions?.articleStyle ??
+            siteOpt?.articleStyle ??
+            getArticleStyle(site.id),
         },
       );
     } finally {
