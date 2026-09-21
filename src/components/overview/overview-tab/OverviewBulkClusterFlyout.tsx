@@ -152,6 +152,7 @@ export function OverviewBulkClusterFlyout({
     () => groupOverviewClusterItemsIntoColumns(cluster.items),
     [cluster.items],
   );
+  const uiGitSha = (import.meta.env.VITE_DEPLOY_GIT_SHA as string | undefined)?.trim() ?? "";
 
   return (
     <HoverCard open={open} onOpenChange={setOpen} openDelay={120} closeDelay={80}>
@@ -209,6 +210,14 @@ export function OverviewBulkClusterFlyout({
             </div>
           ))}
         </div>
+        {cluster.id === "aiseo" && uiGitSha ? (
+          <div
+            className="border-t border-white/10 bg-black px-2.5 py-1 font-mono text-base text-white/50"
+            title="UI git commit (dev/build)"
+          >
+            ui {uiGitSha.length > 7 ? uiGitSha.slice(0, 7) : uiGitSha}
+          </div>
+        ) : null}
       </HoverCardContent>
     </HoverCard>
   );

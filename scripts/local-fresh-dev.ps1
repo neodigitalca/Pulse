@@ -1,6 +1,6 @@
-# Refresh local UI from the ASAP/Polish PR branch. Docker is WordPress only; Vite serves localhost:8080.
+# Pull latest UI code and print how to run Vite (Docker is WordPress only).
 param(
-  [string]$Branch = "cursor/asap-article-style-29e7"
+  [string]$Branch = "main"
 )
 
 $ErrorActionPreference = "Stop"
@@ -21,7 +21,8 @@ Write-Host ""
 Write-Host "Start the UI (leave this running):"
 Write-Host "  npm run dev:local"
 Write-Host ""
-Write-Host "Open http://localhost:8080/#generator -> Opt -> Posts or SAP -> AISEO -> Content -> Polish -> Short"
+Write-Host "Open http://localhost:8080/#generator -> Opt -> AISEO -> Content -> Polish -> Short"
+Write-Host "(On Pages, Short saves style only; on Posts/SAP it also runs bulk Content.)"
 Write-Host ""
 Write-Host "Docker (WordPress API only). Restart WP Staging site in the desktop app, or:"
 Write-Host "  docker restart wpstg-neopulse-local-php"

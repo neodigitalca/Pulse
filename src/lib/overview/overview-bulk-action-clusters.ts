@@ -211,7 +211,7 @@ export function buildOverviewBulkActionClusters(
         onSelect: () => void c.handleAiFaqAll(),
       },
       { kind: "category", id: "content-cat", label: "Content" },
-      ...(c.sitemapSource === "posts" || c.sitemapSource === "sap"
+      ...(c.sitemapSource !== "pages"
         ? [
             {
               kind: "action" as const,
@@ -226,31 +226,35 @@ export function buildOverviewBulkActionClusters(
                 optimizingBatch,
               onSelect: () => void c.handleOptimizeAll(),
             },
-            {
-              kind: "submenu" as const,
-              id: "content-polish",
-              label: "Polish",
-              disabled: !c.site || ctx.bulkWorkspaceBusy,
-              children: [
-                {
-                  id: "polish-short",
-                  label: "Short",
-                  emphasize: ctx.articleStyle === "asap",
-                  disabled:
-                    noRows(c) ||
-                    !c.site ||
-                    !!p.optimizeAll ||
-                    optimizingSite ||
-                    optimizingBatch,
-                  onSelect: () => {
-                    ctx.onArticleStyleChange?.("asap");
-                    void c.handleOptimizeAll({ articleStyle: "asap" });
-                  },
-                },
-              ],
-            },
           ]
         : []),
+      {
+        kind: "submenu" as const,
+        id: "content-polish",
+        label: "Polish",
+        disabled: !c.site || ctx.bulkWorkspaceBusy,
+        children: [
+          {
+            id: "polish-short",
+            label: "Short",
+            emphasize: ctx.articleStyle === "asap",
+            disabled:
+              !c.site ||
+              ctx.bulkWorkspaceBusy ||
+              (c.sitemapSource !== "pages" &&
+                (noRows(c) ||
+                  !!p.optimizeAll ||
+                  optimizingSite ||
+                  optimizingBatch)),
+            onSelect: () => {
+              ctx.onArticleStyleChange?.("asap");
+              if (c.sitemapSource !== "pages") {
+                void c.handleOptimizeAll({ articleStyle: "asap" });
+              }
+            },
+          },
+        ],
+      },
       {
         kind: "action",
         id: "bulk-seo-extra",
