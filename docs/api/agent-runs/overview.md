@@ -7,16 +7,26 @@ order: 0
 
 <!-- manual -->
 
-Running Agents persists automation jobs as team-scoped **AgentRun** records. Dispatch from **Pulse Assist Build** or **Task Manager → Execute with agent**. The **Agents** tab in the right sidebar lists active runs and polls until each job reaches a terminal status.
+Running Agents persists automation jobs as team-scoped **AgentRun** records. Dispatch from **Pulse Assist Build**, **Task Manager → Execute with agent**, or a **Pulse Forge workflow** action node. The **Agents** tab in the right sidebar lists active runs and polls until each job reaches a terminal status.
 
 ## Dispatch paths
 
 | Source | `source` field | Trigger |
 | --- | --- | --- |
 | Pulse Assist Build | `pulse_assist` | Build card **Run automation** (`type: automation_dispatch`) |
-| Task Manager | `task_manager` | Task detail **Execute with agent** (requires `executionKind` + `executionPayload.targetUrl`) |
+| Task Manager | `task_manager` | Task detail **Execute with agent** |
+| Pulse Forge workflow | `workflow` | Graph walker starts an action node (`useWorkflowTriggerRunner`) |
 
-Both paths call `POST /api/agent-runs` and share the same client executor.
+All three paths call `POST /api/agent-runs` and share the same harness registry.
+
+Task execute requirements depend on `executionKind`:
+
+| Kind | Required payload |
+| --- | --- |
+| `content_optimizer` / `content_optimizer_meta` | `targetBucket` or `targetUrls` (or `targetUrl` of `ALL` with a bucket) |
+| `gsc_reporting` | `comparePreset` `mom` or `yoy` |
+| `post_creator` | `postCount` ≥ 1 |
+| `local_dominator_export` | `businessName` and `keyword` |
 
 Long OpenRouter work runs in the **browser** (client executor) for legacy client-mode runs. **Post creator** task executions use **server mode**: WordPress cron worker (`neo_pulse_app_agent_run_worker`) processes one bounded tick every 2 minutes without an open browser tab.
 
@@ -109,5 +119,7 @@ PHP merges incoming `result` and nested `checkpoint` with existing JSON on each 
 
 ## Related
 
-- [Recipes](agent-runs/recipes.md)
-- [Task Manager execute](agent-runs/task-manager-execute.md)
+- [Recipes](recipes)
+- [Task Manager execute](task-manager-execute)
+- [Pulse Forge workflows](../pulse-forge/workflows)
+- [Local Dominator export](../local-dominator/overview)

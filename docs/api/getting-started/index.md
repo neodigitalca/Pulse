@@ -24,7 +24,10 @@ Browser clients must send `credentials: "include"` on every `fetch`. Server-side
 | Environment | Base |
 | --- | --- |
 | Production | `https://neodigital.ca/api` |
-| Local dev (Vite proxy) | `/api` (proxied to neodigital.ca) |
+| Local WP (`npm run dev:local`) | `/api` on `http://localhost:8080` (custom Vite plugin → `https://neopulse.local`) |
+| Live API (`npm run dev:remote`) | `/api` (Vite `server.proxy` → neodigital.ca) |
+
+`scripts/resolve-dev-api-target.cjs` picks the target: `VITE_LOCAL_API_TARGET`, else `scripts/local-wp-staging.config.json` (`apiProxyTarget` or `siteUrl`), else `https://neodigital.ca`. Hosts ending in `.local`, `localhost`, or `127.*` use the custom proxy (cookie rewrite + redirect follow), not Vite `server.proxy`.
 
 All paths in this reference are relative to `/api`. Example: `POST /api/auth/login` means `POST https://neodigital.ca/api/auth/login`.
 
@@ -53,5 +56,8 @@ The API is organized by prefix: `auth`, `teams`, `wordpress`, `gsc`, `dataforseo
 - [Teams](../teams/overview) — agencies, invites, RBAC
 - [WordPress](../wordpress/overview) — site inventory and publishing
 - [Integrations](../integrations/overview) — manager cloud settings and properties
+- [Pulse Forge](../pulse-forge/overview): recipes, workflows, schedule panel
+- [Agent runs](../agent-runs/overview): Running Agents dispatch
+- [Local Dominator](../local-dominator/overview): grid CSV export
 
 Use the sidebar to browse every endpoint by topic.

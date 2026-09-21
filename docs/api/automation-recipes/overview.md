@@ -59,7 +59,15 @@ Calendar editorial recipes (`monthly-post-creator`, `monthly-3-posts-editorial`)
 
 ## UI
 
-**Teams → Pulse Forge** lists the recipe library, installed automations, and the **Automation Planner** (WHEN/THEN visual editor plus JSON tab). Tasks keeps manual projects and My Tasks only.
+**Manager → Pulse Forge** is the UI:
+
+| Nav | Hash | Contents |
+| --- | --- | --- |
+| My Forge | `#pulse-forge/forge` | Installed automations |
+| Agents | `#pulse-forge/recipes` | Recipe library + planner (WHEN/THEN + JSON) |
+| Workflows | `#pulse-forge/workflows` | Graph editor (can install a recipe as a workflow) |
+
+Tasks keeps manual projects and My Tasks only. See [Pulse Forge](../pulse-forge/overview) and [Workflows](../pulse-forge/workflows).
 
 ## Recipe JSON shape
 
