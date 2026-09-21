@@ -41,6 +41,7 @@ import {
   getBulkInventorySessionSnapshot,
 } from "@/lib/wordpress-bulk-inventory-session-cache";
 import { overviewBulkPageRanges } from "@/lib/overview/overview-bulk-page-size";
+import { getArticleStyle } from "@/lib/optimization-settings-storage";
 import { setOverviewBulkHarnessPageState } from "@/lib/overview/overview-bulk-page-state";
 import {
   overviewBulkRowEntries,
@@ -486,6 +487,7 @@ export function useOverviewTabResearchPipelines({
           inventorySitemapSource: sitemapSource,
           prefilledOverviewTargets,
           prefilledUrlKeywords,
+          articleStyle: siteOpt?.articleStyle ?? getArticleStyle(site.id),
         },
       );
     } finally {

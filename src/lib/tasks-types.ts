@@ -120,6 +120,7 @@ export type TaskExecutionPayload = {
     manualKeyword?: string;
     testMode?: boolean;
     autoOptimize?: boolean;
+    articleStyle?: "standard" | "asap";
   };
 };
 

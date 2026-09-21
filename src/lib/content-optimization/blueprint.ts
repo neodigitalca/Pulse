@@ -10,7 +10,12 @@ import {
   formatChecklistFileContent,
   prepareChecklistForPipeline,
 } from "@/lib/content-word-blocklist";
-import { buildFocusedArticlePurpose } from "@/lib/content-generation/article-length-policy";
+import {
+  buildFocusedArticlePurpose,
+  resolveArticleLengthPromptContext,
+  type ArticleStyle,
+} from "@/lib/content-generation/article-length-policy";
+import { getArticleStyle } from "@/lib/optimization-settings-storage";
 import type { KeywordData } from "@/lib/keyword-types";
 import type { WordPressSite } from "@/components/integrations/types";
 import { OptimizationFileManager } from "@/lib/optimization-file-manager";
@@ -53,6 +58,7 @@ export async function generateOptimizedBlueprint(
   },
   /** Original post HTML — used to force existing image/video URLs into checklist + blueprint. */
   existingContent?: string,
+  articleStyle?: ArticleStyle,
 ): Promise<{ blueprintResult: any; checklist: string[] }> {
   const openRouterApiKey = loadApiKey();
   if (!openRouterApiKey?.trim()) throw new Error("OpenRouter API key not found. Please set it in settings.");
@@ -114,6 +120,17 @@ export async function generateOptimizedBlueprint(
   setProgress({ step: "Generating optimized blueprint...", progress: 65, message: "From keywords and H2 sections" });
   const researchModel = getResearchModel(site.id);
 
+  const entityForLength =
+    extractedEntity && extractedEntity !== "N/A" ? extractedEntity : undefined;
+  const effectiveArticleStyle = articleStyle ?? getArticleStyle(site.id);
+  const { style: resolvedStyle, articleMaxWords } = resolveArticleLengthPromptContext(
+    effectiveArticleStyle,
+    {
+      existingContent,
+      isServiceArea: Boolean(entityForLength),
+    },
+  );
+
   const bodyHtml =
     (typeof existingContent === "string" && existingContent.trim()) ||
     (typeof existingPost?.content === "string" ? existingPost.content : "") ||
@@ -165,6 +182,9 @@ export async function generateOptimizedBlueprint(
       semrushScatterContext: semrushScatterStr,
       semrushApprovedExternalUrls: semrushForBlueprint?.externalUrls,
       semrushAnchorPhrases: semrushForBlueprint?.anchorPhrases,
+      articleStyle: resolvedStyle,
+      articleMaxWords,
+      existingContent: bodyHtml.trim() || undefined,
       ...(forcedMediaPrompt ? { userPrompt: forcedMediaPrompt } : {}),
     } as any
   );
@@ -195,7 +215,7 @@ export async function generateOptimizedBlueprint(
 
   const blueprintContext: BlogTemplateContext = {
     flowTitle: existingTitle || primaryKeyword,
-    flowPurpose: buildFocusedArticlePurpose(primaryKeyword),
+    flowPurpose: buildFocusedArticlePurpose(primaryKeyword, resolvedStyle, articleMaxWords),
     keywordData: primaryKeywordData,
     ...(forcedMediaPrompt ? { userPrompt: forcedMediaPrompt } : {}),
   };
@@ -215,6 +235,9 @@ export async function generateOptimizedBlueprint(
       siteId: site.id,
       primaryKeyword,
       entity: entityForTemplate,
+      articleStyle: resolvedStyle,
+      articleMaxWords,
+      existingContent: bodyHtml.trim() || undefined,
       semrushKeywordsContext: semrushKeywordsCtx,
       semrushScatterContext: semrushScatterStr,
       semrushApprovedExternalUrls: semrushForBlueprint?.externalUrls,

@@ -160,6 +160,7 @@ export interface UseBulkAutoGenerateProps {
     featuredImageMode: "y" | "n" | "google-maps";
     entity: string;
   };
+  articleStyle?: import("@/lib/content-generation/article-length-policy").ArticleStyle;
 }
 
 export function useBulkAutoGenerate({
@@ -189,6 +190,7 @@ export function useBulkAutoGenerate({
   skipDataForSeoApiKey = false,
   blogImportSourceFile = null,
   blogImportForm,
+  articleStyle = "standard",
 }: UseBulkAutoGenerateProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentRow, setCurrentRow] = useState(0);
@@ -871,6 +873,7 @@ isAnalyzingRef.current = isAnalyzing;
           peerSites: peerSitesForRun.length > 0 ? peerSitesForRun : undefined,
           peerFeaturedReport,
           onPeerFeaturedCsv: mergePeerFeaturedCsv,
+          articleStyle,
           // Inner pipeline passes the *storage* row index (displayRows index). Progress UI must stay batch-based (i).
           onProgress: (_storageRowIndex, _total, statusText) => {
             setCurrentRow(i);
@@ -961,7 +964,7 @@ isAnalyzingRef.current = isAnalyzing;
       abortControllerRef.current = null;
       processingInFlightRef.current = false;
     }
-  }, [apiKey, openRouterApiKey, selectedModel, temperature, maxTokens, topP, flowPurpose, fileManager, processRow, connectedSite, wordPressPosting, siteConfigs, selectedWordPressSites, skipDataForSeoApiKey, blogImportSourceFile, blogImportForm, recordRunStatus, snapshotHarnessForRow]);
+  }, [apiKey, openRouterApiKey, selectedModel, temperature, maxTokens, topP, flowPurpose, fileManager, processRow, connectedSite, wordPressPosting, siteConfigs, selectedWordPressSites, skipDataForSeoApiKey, blogImportSourceFile, blogImportForm, articleStyle, recordRunStatus, snapshotHarnessForRow]);
 
   /**
    * Cancel processing

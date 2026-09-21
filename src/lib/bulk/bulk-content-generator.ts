@@ -12,7 +12,10 @@ import {
 } from './bulk-harness-outline';
 import { ensurePressReleaseSectionHeading } from '@/lib/press-release/press-release-heading-guard';
 import { pressReleaseHarnessSectionLabel } from '@/lib/press-release/press-release-harness-prompts';
-import { buildFocusedArticlePurpose } from '@/lib/content-generation/article-length-policy';
+import {
+  buildFocusedArticlePurpose,
+  resolveArticleLengthPromptContext,
+} from '@/lib/content-generation/article-length-policy';
 import { getProductionModel } from '@/lib/optimization-settings-storage';
 import { resolveHarnessHttpReferer, runHarnessOpenRouterSection } from '@/lib/bulk/harness-openrouter-worker-client';
 import {
@@ -310,6 +313,12 @@ export async function generateMarkdownContentHarnessed(
 
   const portfolioBlocked = options.portfolioBlockedHosts;
 
+  const lengthCtx = resolveArticleLengthPromptContext(options.articleStyle, {
+    isServiceArea: Boolean(entity),
+  });
+  const harnessArticleStyle = lengthCtx.style;
+  const harnessArticleMaxWords = options.articleMaxWords ?? lengthCtx.articleMaxWords;
+
   const systemPrompt = await buildSystemPrompt(
     knowledgeBaseContext,
     options.openRouterApiKey,
@@ -358,7 +367,12 @@ export async function generateMarkdownContentHarnessed(
         );
         let userPrompt = buildBulkHarnessSectionUserPrompt(
           blueprint.title || row.title,
-          blueprint.purpose || buildFocusedArticlePurpose(keywordData.keyword),
+          blueprint.purpose ||
+            buildFocusedArticlePurpose(
+              keywordData.keyword,
+              harnessArticleStyle,
+              harnessArticleMaxWords,
+            ),
           singleSectionPrompt,
           outlineBlock,
           [],
@@ -376,6 +390,13 @@ export async function generateMarkdownContentHarnessed(
           portfolioBlocked,
           promptEnv?.contentKind,
           releaseTopic,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          harnessArticleStyle,
+          harnessArticleMaxWords,
         );
         const importedTone = getImportedToneFromRow(row);
         if (importedTone) {
@@ -507,7 +528,8 @@ export async function generateMarkdownContentHarnessed(
     );
     let userPrompt = buildBulkHarnessSectionUserPrompt(
       blueprint.title || row.title,
-      blueprint.purpose || buildFocusedArticlePurpose(keywordData.keyword),
+      blueprint.purpose ||
+        buildFocusedArticlePurpose(keywordData.keyword, harnessArticleStyle, harnessArticleMaxWords),
       singleSectionPrompt,
       outlineBlock,
       opts.otherSectionTitles,
@@ -530,6 +552,8 @@ export async function generateMarkdownContentHarnessed(
       opts.isOverviewSection ? undefined : titleForCb,
       promptEnv?.primaryKeyword?.trim() || row.keyword_focus?.trim() || row.keyword?.trim() || undefined,
       publishedSectionTitles,
+      harnessArticleStyle,
+      harnessArticleMaxWords,
     );
     if (opts.isOverviewSection && entity && entityWikipediaUrl) {
       const wikiBlock = formatMandatoryEntityWikipediaForPrompt({

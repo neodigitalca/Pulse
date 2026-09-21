@@ -422,6 +422,10 @@ export function BulkBlogGenerationTab({
               directionsSiteName: bulkBindings?.connectedSite?.name,
             }}
             onDetailsOpenChange={setDetailsDrawerOpen}
+            generatorArticleStyle={bulkBindings?.generatorArticleStyle ?? "standard"}
+            onGeneratorArticleStyleChange={
+              bulkBindings?.setGeneratorArticleStyle ?? (() => undefined)
+            }
           />
         ) : null}
 
@@ -468,6 +472,10 @@ export function BulkBlogGenerationTab({
               directionsSiteName: bulkBindings?.connectedSite?.name,
             }}
             onDetailsOpenChange={setDetailsDrawerOpen}
+            generatorArticleStyle={bulkBindings?.generatorArticleStyle ?? "standard"}
+            onGeneratorArticleStyleChange={
+              bulkBindings?.setGeneratorArticleStyle ?? (() => undefined)
+            }
           />
         ) : null}
 

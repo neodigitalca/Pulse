@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { ArticleStyle } from '@/lib/content-generation/article-length-policy';
 
 export interface OptimizationOptions {
   optimizeTitle: boolean;
@@ -27,6 +28,8 @@ export interface OptimizationOptions {
   contentOnlyUpload?: boolean;
   /** Overview sitemap bucket that loaded inventory (posts | pages | sap). */
   inventorySitemapSource?: "posts" | "pages" | "sap";
+  /** Standard (default) or ASAP condensed body copy. */
+  articleStyle?: ArticleStyle;
 }
 
 interface UseOptimizationOptionsProps {
@@ -53,6 +56,9 @@ export function useOptimizationOptions({
   const [useAcfKeyword, setUseAcfKeyword] = useState(optimizationOptions?.useAcfKeyword ?? false);
   const [manualKeyword, setManualKeyword] = useState(optimizationOptions?.manualKeyword ?? '');
   const [bulkFaqMinimum4, setBulkFaqMinimum4] = useState(optimizationOptions?.bulkFaqMinimum4 ?? false);
+  const [articleStyle, setArticleStyle] = useState<ArticleStyle>(
+    optimizationOptions?.articleStyle ?? "standard",
+  );
 
   // Sync local state with props when they change
   useEffect(() => {
@@ -72,6 +78,7 @@ export function useOptimizationOptions({
       setUseAcfKeyword(optimizationOptions.useAcfKeyword ?? false);
       setManualKeyword(optimizationOptions.manualKeyword ?? '');
       setBulkFaqMinimum4(optimizationOptions.bulkFaqMinimum4 ?? false);
+      setArticleStyle(optimizationOptions.articleStyle ?? "standard");
     }
   }, [optimizationOptions]);
 
@@ -92,6 +99,7 @@ export function useOptimizationOptions({
     useAcfKeyword,
     manualKeyword,
     bulkFaqMinimum4,
+    articleStyle,
     ...updates,
   });
 
@@ -201,6 +209,13 @@ export function useOptimizationOptions({
     }
   };
 
+  const handleArticleStyleChange = (style: ArticleStyle) => {
+    setArticleStyle(style);
+    if (onOptimizationOptionsChange) {
+      onOptimizationOptionsChange(createUpdatedOptions({ articleStyle: style }));
+    }
+  };
+
   return {
     // State values
     optimizeTitle,
@@ -218,6 +233,7 @@ export function useOptimizationOptions({
     useAcfKeyword,
     manualKeyword,
     bulkFaqMinimum4,
+    articleStyle,
     // Handlers
     handleOptimizeTitleChange,
     handleOptimizeMetaChange,
@@ -234,6 +250,7 @@ export function useOptimizationOptions({
     handleUseAcfKeywordChange,
     handleManualKeywordChange,
     handleBulkFaqMinimum4Change,
+    handleArticleStyleChange,
     // Current options object
     currentOptions: {
       optimizeTitle,
@@ -251,6 +268,7 @@ export function useOptimizationOptions({
       useAcfKeyword,
       manualKeyword,
       bulkFaqMinimum4,
+      articleStyle,
     },
   };
 }

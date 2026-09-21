@@ -1,4 +1,8 @@
-import { buildFocusedArticlePurpose } from "@/lib/content-generation/article-length-policy";
+import {
+  buildFocusedArticlePurpose,
+  resolveArticleLengthPromptContext,
+  type ArticleStyle,
+} from "@/lib/content-generation/article-length-policy";
 import { parseImportedSectionsJson, parseImportedLinksJson, parseKeywordQuestionsJson, parseModifierLinksJson } from './bulk/bulk-csv-parser';
 import {
   injectImportedLinksIntoBlueprintAgents,
@@ -365,6 +369,10 @@ export interface BulkProcessingOptions {
   peerFeaturedReport?: PeerFeaturedImageReportCollector;
   /** Fired when a searched peer featured library CSV is ready (added to run files). */
   onPeerFeaturedCsv?: (file: PeerFeaturedLibraryCsvFile) => void;
+  /** Condensed copy mode (shorter checklist, tighter harness). */
+  articleStyle?: ArticleStyle;
+  /** Resolved once per row when set; otherwise derived from style at checklist time. */
+  articleMaxWords?: number;
 }
 
 export interface BulkProcessingResult {
@@ -774,7 +782,15 @@ export async function generateBlueprintAndContent(
       : undefined;
   const entityWikiUrl = enrichedRow.wikipedia_url?.trim() || undefined;
   const entityWikiTitle = enrichedRow.wikipedia_title?.trim() || undefined;
-  const bulkOptions: BulkProcessingOptions = { ...options, useEntitySitemapTemplate };
+  const lengthCtx = resolveArticleLengthPromptContext(options.articleStyle, {
+    isServiceArea: Boolean(entityForLocalTemplate),
+  });
+  const bulkOptions: BulkProcessingOptions = {
+    ...options,
+    useEntitySitemapTemplate,
+    articleStyle: lengthCtx.style,
+    articleMaxWords: options.articleMaxWords ?? lengthCtx.articleMaxWords,
+  };
 
 try {
     // CRITICAL FIX: Merge PAA questions from paaRawResponse into aiAnalysis
@@ -1010,6 +1026,8 @@ try {
         wikipediaUrl: entityWikiUrl,
         wikipediaTitle: entityWikiTitle,
         prefilledRowContract: prefilledRowContract || undefined,
+        articleStyle: bulkOptions.articleStyle,
+        articleMaxWords: bulkOptions.articleMaxWords,
       }
     );
     checklist = injectImportedLinksIntoChecklist(checklist, importedDraftLinks);
@@ -1054,7 +1072,13 @@ try {
     generatedFiles.push(checklistFile);
     options.onProgress?.(rowIndex, 0, 'Blog checklist ready');
 
-    const flowPurposeStr = options.flowPurpose || buildFocusedArticlePurpose(keywordData.keyword);
+    const flowPurposeStr =
+      options.flowPurpose ||
+      buildFocusedArticlePurpose(
+        keywordData.keyword,
+        bulkOptions.articleStyle ?? "standard",
+        bulkOptions.articleMaxWords,
+      );
     const outlineTextForImage = `Blog checklist outline:\n${checklist.join('\n')}`;
 
     const entityForImage =
@@ -1119,6 +1143,8 @@ try {
         userExternalLinks: rowExplicitExternalPairs.length ? rowExplicitExternalPairs : undefined,
         wikipediaUrl: entityWikiUrl,
         wikipediaTitle: entityWikiTitle,
+        articleStyle: bulkOptions.articleStyle,
+        articleMaxWords: bulkOptions.articleMaxWords,
       }),
       useAiImagePath
         ? generateImageChecklist(enrichedRow.title, flowPurposeStr, outlineTextForImage, imageChecklistLlmOptions)
