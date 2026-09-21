@@ -732,6 +732,37 @@ function buildManifest() {
         { slug: "god-mode/endpoints", title: "Endpoints", order: 40 },
       ],
     },
+    {
+      id: "pulse-forge",
+      label: "Pulse Forge",
+      items: [
+        { slug: "pulse-forge/overview", title: "Overview", order: 0 },
+        { slug: "pulse-forge/workflows", title: "Workflows", order: 10 },
+      ],
+    },
+    {
+      id: "agent-runs",
+      label: "Agent runs",
+      items: [
+        { slug: "agent-runs/overview", title: "Overview", order: 0 },
+        { slug: "agent-runs/recipes", title: "Recipes", order: 10 },
+        { slug: "agent-runs/task-manager-execute", title: "Task Manager execute", order: 20 },
+      ],
+    },
+    {
+      id: "automation-recipes",
+      label: "Automation recipes",
+      items: [
+        { slug: "automation-recipes/overview", title: "Overview", order: 0 },
+      ],
+    },
+    {
+      id: "local-dominator",
+      label: "Local Dominator",
+      items: [
+        { slug: "local-dominator/overview", title: "Overview", order: 0 },
+      ],
+    },
   ];
 
   const apiSections = Object.keys(sections)

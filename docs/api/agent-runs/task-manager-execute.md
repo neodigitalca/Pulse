@@ -9,18 +9,19 @@ order: 20
 
 ## Execute with agent
 
-Shown on task detail when the task payload includes:
+Shown on task detail when the task is assigned to Pulse AI and has a supported `executionKind`. Payload rules:
 
-- `executionKind`: `content_optimizer` or `content_optimizer_meta`
-- `executionPayload.targetUrl`: page URL to optimize
-- Task assigned to Pulse AI (server requirement for `/execute`)
+- `content_optimizer` / `content_optimizer_meta`: `targetBucket` or `targetUrls` (or `targetUrl` of `ALL`)
+- `gsc_reporting`: `comparePreset` `mom` or `yoy`
+- `post_creator`: `postCount` ≥ 1
+- `local_dominator_export`: `businessName` and `keyword`
 
 Clicking **Execute with agent**:
 
 1. Calls `POST /api/teams/{teamId}/tasks/tasks/{taskId}/execute`
 2. Creates an AgentRun with `source: task_manager` and `taskId`
 3. Opens the **Agents** tab in the right sidebar
-4. Client executor runs content optimization using `clientRunContract` when returned
+4. The matching harness runs. Optimizer/reporting/export kinds use `clientRunContract` when preflight returns `awaiting_client`. Post creator uses server mode.
 
 Pulse execution updates the linked task to `in_progress` during preflight. It does **not** auto-mark the task `done` when the agent run finishes; mark the task complete manually in Task Manager.
 
