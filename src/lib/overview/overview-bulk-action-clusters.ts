@@ -43,6 +43,23 @@ export type OverviewBulkClusterCheckboxItem = {
   onCheckedChange: (checked: boolean) => void;
 };
 
+export type OverviewBulkClusterSubmenuChild = {
+  id: string;
+  label: string;
+  disabled: boolean;
+  emphasize?: boolean;
+  onSelect: () => void;
+  closeOnSelect?: boolean;
+};
+
+export type OverviewBulkClusterSubmenuItem = {
+  kind: "submenu";
+  id: string;
+  label: string;
+  disabled: boolean;
+  children: OverviewBulkClusterSubmenuChild[];
+};
+
 export type OverviewBulkClusterSeparator = { kind: "separator"; id: string };
 
 export type OverviewBulkClusterCategory = { kind: "category"; id: string; label: string };
@@ -50,6 +67,7 @@ export type OverviewBulkClusterCategory = { kind: "category"; id: string; label:
 export type OverviewBulkClusterItem =
   | OverviewBulkClusterActionItem
   | OverviewBulkClusterCheckboxItem
+  | OverviewBulkClusterSubmenuItem
   | OverviewBulkClusterSeparator
   | OverviewBulkClusterCategory;
 
@@ -193,7 +211,7 @@ export function buildOverviewBulkActionClusters(
         onSelect: () => void c.handleAiFaqAll(),
       },
       { kind: "category", id: "content-cat", label: "Content" },
-      ...(c.sitemapSource !== "pages"
+      ...(c.sitemapSource === "posts" || c.sitemapSource === "sap"
         ? [
             {
               kind: "action" as const,
@@ -209,17 +227,27 @@ export function buildOverviewBulkActionClusters(
               onSelect: () => void c.handleOptimizeAll(),
             },
             {
-              kind: "action" as const,
-              id: "content-asap",
-              label: "ASAP",
-              icon: Sparkles,
-              emphasize: ctx.articleStyle === "asap",
+              kind: "submenu" as const,
+              id: "content-polish",
+              label: "Polish",
               disabled: !c.site || ctx.bulkWorkspaceBusy,
-              closeOnSelect: false,
-              onSelect: () => {
-                const next = ctx.articleStyle === "asap" ? "standard" : "asap";
-                ctx.onArticleStyleChange?.(next);
-              },
+              children: [
+                {
+                  id: "polish-short",
+                  label: "Short",
+                  emphasize: ctx.articleStyle === "asap",
+                  disabled:
+                    noRows(c) ||
+                    !c.site ||
+                    !!p.optimizeAll ||
+                    optimizingSite ||
+                    optimizingBatch,
+                  onSelect: () => {
+                    ctx.onArticleStyleChange?.("asap");
+                    void c.handleOptimizeAll({ articleStyle: "asap" });
+                  },
+                },
+              ],
             },
           ]
         : []),
