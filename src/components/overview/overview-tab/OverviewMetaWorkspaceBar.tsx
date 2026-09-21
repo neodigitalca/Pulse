@@ -27,7 +27,6 @@ import { BULK_TOOLBAR_GROUP_DIVIDER } from "@/components/keyword-research/bulk/b
 import type { OverviewTabController } from "@/hooks/overview/use-overview-tab-controller";
 import { useOverviewSiteWarmDetails } from "@/hooks/overview/use-overview-site-warm-details";
 import type { useWordPressOptimization } from "@/contexts/wordpress-optimization-context";
-import { ArticleStylePills } from "@/components/shared/ArticleStylePills";
 import type { ArticleStyle } from "@/lib/content-generation/article-length-policy";
 import { getArticleStyle, saveArticleStyle } from "@/lib/optimization-settings-storage";
 import type { OptimizationOptions } from "@/hooks/use-optimization-options";
@@ -141,6 +140,7 @@ export function OverviewContentHeader({
     hasDetectedSitemaps,
     bulkWorkspaceBusy,
     articleStyle: overviewArticleStyle,
+    onArticleStyleChange: setOverviewArticleStyle,
   });
 
   const singlePageCtx: OverviewSinglePageDetailsContext | undefined = site
@@ -186,13 +186,6 @@ export function OverviewContentHeader({
 
   const toolbarContent = (
     <>
-      {site ? (
-        <ArticleStylePills
-          value={overviewArticleStyle}
-          onChange={setOverviewArticleStyle}
-          disabled={bulkWorkspaceBusy}
-        />
-      ) : null}
       {clusters.map((cluster) => (
         <OverviewBulkClusterFlyout
           key={cluster.id}

@@ -18,6 +18,7 @@ export type OverviewBulkClusterContext = {
   hasDetectedSitemaps: boolean;
   bulkWorkspaceBusy: boolean;
   articleStyle?: "standard" | "asap";
+  onArticleStyleChange?: (style: "standard" | "asap") => void;
 };
 
 export type OverviewBulkClusterActionItem = {
@@ -206,7 +207,19 @@ export function buildOverviewBulkActionClusters(
                 optimizingSite ||
                 optimizingBatch,
               onSelect: () => void c.handleOptimizeAll(),
-              trailing: ctx.articleStyle === "asap" ? "ASAP" : undefined,
+            },
+            {
+              kind: "action" as const,
+              id: "content-asap",
+              label: "ASAP",
+              icon: Sparkles,
+              emphasize: ctx.articleStyle === "asap",
+              disabled: !c.site || ctx.bulkWorkspaceBusy,
+              closeOnSelect: false,
+              onSelect: () => {
+                const next = ctx.articleStyle === "asap" ? "standard" : "asap";
+                ctx.onArticleStyleChange?.(next);
+              },
             },
           ]
         : []),
