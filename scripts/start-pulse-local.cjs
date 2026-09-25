@@ -61,7 +61,8 @@ async function main() {
     VITE_MCP_API_BASE: process.env.VITE_MCP_API_BASE || "/api/mcp",
   };
 
-  const child = spawn("vite", [], {
+  const viteCmd = process.platform === "win32" ? "npx.cmd" : "npx";
+  const child = spawn(viteCmd, ["vite"], {
     cwd: REPO_ROOT,
     stdio: "inherit",
     shell: true,
