@@ -1,4 +1,4 @@
-import { TrendingUp } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { UnifiedWorkspaceChrome } from "@/components/shared/UnifiedWorkspaceChrome";
 import { SocialPlatformPills, type SocialPlatformTab } from "@/components/social/SocialPlatformPills";
 import { SocialPageBucketSourcePills } from "@/components/social/SocialPageBucketSourcePills";
@@ -38,8 +38,8 @@ export function ContentCreatorWorkspaceHeader({
 
   return (
     <UnifiedWorkspaceChrome
-      icon={TrendingUp}
-      title="Calendar"
+      icon={CalendarDays}
+      title="SMM Posts"
       titleRowMenu={
         <SocialPageBucketSourcePills
           value={ctrl.generateConfig.landingPageSource}

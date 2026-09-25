@@ -6,7 +6,7 @@ export type SocialPlatformTab = "gbp-post" | "content-calendar" | "social-creato
 
 const PLATFORMS: { id: SocialPlatformTab; label: string; icon: LucideIcon }[] = [
   { id: "gbp-post", label: "GBP", icon: Megaphone },
-  { id: "content-calendar", label: "Calendar", icon: CalendarDays },
+  { id: "content-calendar", label: "SMM Posts", icon: CalendarDays },
   { id: "social-creator", label: "Creator", icon: Sparkles },
 ];
 

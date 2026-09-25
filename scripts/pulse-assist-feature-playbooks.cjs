@@ -673,10 +673,10 @@ const FEATURE_PLAYBOOKS = [
     "How do I use the content calendar?",
     "pulse:nav/content-calendar",
     [
-      "Open [Social → Calendar](pulse:nav/content-calendar).",
+      "Open [Social → SMM Posts](pulse:nav/content-calendar).",
       "Generate or edit AI content calendar rows for the active property.",
     ],
-    ["content calendar", "calendar"],
+    ["content calendar", "calendar", "smm posts"],
   ),
   pb(
     "social-creator/overview",

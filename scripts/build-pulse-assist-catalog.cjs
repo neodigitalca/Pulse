@@ -323,14 +323,14 @@ const ASSIST_APP_MODULES = [
   },
   {
     id: "content-calendar",
-    label: "Calendar",
-    menuPath: "Social → Calendar",
+    label: "SMM Posts",
+    menuPath: "Social → SMM Posts",
     section: "social",
     hash: "#content-calendar",
     pulseNav: "pulse:nav/content-calendar",
     managerTab: "content-calendar",
     description: "AI content calendar sheet.",
-    aliases: ["calendar", "content calendar"],
+    aliases: ["smm posts", "calendar", "content calendar"],
     relatedModules: ["social-creator"],
   },
   {
