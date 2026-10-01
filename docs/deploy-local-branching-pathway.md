@@ -134,12 +134,12 @@ curl.exe -k -X POST "https://neopulse.local/api/auth/setup-admin" `
 ## Path B — Live API dev (optional)
 
 ```powershell
-npm run dev
+npm run dev:remote
 ```
 
-Vite proxies `/api` to **https://neodigital.ca**. Use when you only change React and need live production API data.
+`dev:remote` sets `VITE_LOCAL_API_TARGET` to `https://neodigital.ca` and uses Vite `server.proxy` (not the custom local WP plugin). Use when you only change React and need live production API data.
 
-Do **not** use this path to validate PHP or offline API changes.
+`npm run dev` and `npm run dev:local` are the same command (`scripts/dev-local.cjs`). Do **not** use Path B to validate PHP or offline API changes.
 
 ---
 
@@ -221,7 +221,7 @@ Requires `wordpress-plugins/Customer List/SFTP Users_Clients List.csv` and `npm 
 | Goal | Path | Command |
 |------|------|---------|
 | Build a feature offline | A | `npm run dev:local` |
-| Quick UI tweak against live data | B | `npm run dev` |
+| Quick UI tweak against live data | B | `npm run dev:remote` |
 | Ship app to neodigital.ca | C | `npm run deploy:neodigital-app` |
 | Ship plugin to one client | D | `npm run deploy:wp-clients` |
 | Ship plugin to all 1stg staging hosts | D | `npm run deploy:wp-staging` |
@@ -248,8 +248,8 @@ Typical timing: local iteration seconds to minutes; production deploy minutes (b
 |--------|------|
 | `setup:local-wp` | A — one-time local stack |
 | `sync:local-wp` | A — plugins + secrets |
-| `dev:local` | A — Vite + `/api` → neopulse.local |
-| `dev` | B — Vite + `/api` → neodigital.ca |
+| `dev` / `dev:local` | A — same script; Vite + custom `/api` proxy → neopulse.local |
+| `dev:remote` | B — Vite `server.proxy` → neodigital.ca |
 | `embed:neo-pulse-wp-secrets` | A, D — writes `neo-pulse-wp/.env` from repo `.env` |
 | `generate:local-app-secrets` | A — writes local `neo-pulse-app-secrets.php` |
 | `build:neodigital-app` | C — production SPA build |
@@ -270,7 +270,7 @@ Typical timing: local iteration seconds to minutes; production deploy minutes (b
 | `wordpress-plugins/neo-pulse-wp/.env` | A, D | No (generated) |
 | `wordpress-plugins/neo-pulse-app/includes/neo-pulse-app-secrets.php` | A | No (generated) |
 | `wordpress-plugins/flowbie-wpengine.config.json` | C, D | No |
-| `vite.config.ts` | A, B | Yes (`VITE_LOCAL_API_TARGET` for proxy) |
+| `vite.config.ts` | A, B | Yes (custom local WP proxy + LD export plugins when target is `.local`) |
 
 ---
 
@@ -278,15 +278,17 @@ Typical timing: local iteration seconds to minutes; production deploy minutes (b
 
 | Symptom | Likely path | Fix |
 |---------|-------------|-----|
-| Blank page / `127.0.0.1:3001` errors | A | Use `npm run dev:local`, not `dev` |
+| Blank page / `127.0.0.1:3001` errors | A | Use `npm run dev:local` (same as `npm run dev`). Do not point Vite at a missing local port. |
 | Login "Something went wrong" | A | Hard refresh; clear `neo-pulse_device_auth`; confirm `dev:local` |
 | WP Admin NEO Pulse App shows 404 | A | Expected; use `localhost:8080` |
 | HTTPS red in WP Staging Desktop | A | Fix hosts to `127.3.2.1 neopulse.local`; test in browser |
 | Plugins missing in container | A | `docker cp` block above |
 | Deploy rejected / secrets in commit | C | `npm run check:no-secrets`; unstage zips and `.env` |
 | Live `/api` 404 after deploy | C | Reactivate plugin in WP admin; flush permalinks |
+| Local Dominator `LD_EXPORT_WORKER_NOT_CONFIGURED` | A | PHP stub. Use `localhost:8080` + `dev:local`, not `neopulse.local` directly. See [local-dominator/overview](api/local-dominator/overview.md) |
+| Login works on 8080 but cookies bounce | A | Custom proxy rewrites `Set-Cookie` to `Domain=localhost`. Clear cookies and `neo-pulse_device_auth` |
 
-More detail: [local-wp-staging-dev.md](local-wp-staging-dev.md), [deploy-neo-pulse.md](deploy-neo-pulse.md).
+More detail: [local-wp-staging-dev.md](local-wp-staging-dev.md), [deploy-neo-pulse.md](deploy-neo-pulse.md), [Pulse Forge](api/pulse-forge/overview.md).
 
 ---
 
@@ -299,4 +301,7 @@ More detail: [local-wp-staging-dev.md](local-wp-staging-dev.md), [deploy-neo-pul
 - [`scripts/fix-wp-staging-hosts.ps1`](../scripts/fix-wp-staging-hosts.ps1)
 - [`wordpress-plugins/deploy-neo-pulse-app.js`](../wordpress-plugins/deploy-neo-pulse-app.js)
 - [`src/lib/wordpress-api/connection.ts`](../src/lib/wordpress-api/connection.ts) — API base resolution
-- [`vite.config.ts`](../vite.config.ts) — local proxy when `VITE_LOCAL_API_TARGET` is set
+- [`vite.config.ts`](../vite.config.ts) — local WP proxy + Local Dominator host export when the API target is `.local`
+- [`scripts/vite-local-wp-api-proxy-plugin.mjs`](../scripts/vite-local-wp-api-proxy-plugin.mjs)
+- [`scripts/vite-local-dominator-export-plugin.mjs`](../scripts/vite-local-dominator-export-plugin.mjs)
+- [`scripts/resolve-dev-api-target.cjs`](../scripts/resolve-dev-api-target.cjs)

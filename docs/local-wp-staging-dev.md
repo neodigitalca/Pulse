@@ -60,7 +60,16 @@ curl.exe -k -X POST https://neopulse.local/api/auth/setup-admin `
 npm run dev
 ```
 
-Open **http://localhost:8080**. Do **not** use WP Admin → **NEO Pulse App** for the UI (that iframe targets `/neo-pulse/` on local WP, which has no built SPA). Vite proxies `/api` to your local WordPress API on `neopulse.local` when `scripts/local-wp-staging.config.json` is present.
+Open **http://localhost:8080**. Do **not** use WP Admin → **NEO Pulse App** for the UI (that iframe targets `/neo-pulse/` on local WP, which has no built SPA).
+
+When `scripts/local-wp-staging.config.json` is present (or `VITE_LOCAL_API_TARGET` points at a `.local` / `localhost` / `127.*` host), Vite does **not** use the built-in `server.proxy`. It loads two custom plugins:
+
+| Plugin | Path | Role |
+| --- | --- | --- |
+| Local WP API proxy | `scripts/vite-local-wp-api-proxy-plugin.mjs` | Forwards `/api` to `neopulse.local`, follows redirects, rewrites `Set-Cookie` to `Domain=localhost` and drops `Secure` |
+| Local Dominator export | `scripts/vite-local-dominator-export-plugin.mjs` | Intended to run Puppeteer on the **host** for `POST /api/local-dominator/export-grid` |
+
+The proxy exists because WordPress HTTPS redirects would otherwise leak to the browser as cross-origin. See [Local Dominator export](api/local-dominator/overview.md) if export-grid still hits the PHP stub.
 
 Edit React in `src/` or PHP in `wordpress-plugins/` and refresh. Plugin changes apply immediately when junctions reach the Docker webroot (see [deploy-local-branching-pathway.md](deploy-local-branching-pathway.md) if plugins are missing in the container).
 
@@ -99,7 +108,8 @@ npm run deploy:wp-clients
 |--------|---------|
 | `setup:local-wp` | One-time hosts + secrets + plugin sync |
 | `sync:local-wp` | Re-sync plugins and regenerate secrets |
-| `dev:local` | Vite dev with `/api` → `neopulse.local` |
+| `dev` / `dev:local` | Same script. Vite + custom `/api` proxy → `neopulse.local` |
+| `dev:remote` | Vite `server.proxy` → neodigital.ca |
 | `generate:local-app-secrets` | Regenerate app plugin secrets only |
 | `setup:local-dominator` | Local Dominator env, secrets paths, recipe check |
 | `setup:local-dominator:smoke` | Same plus Advance Blinds grid export smoke test |
@@ -107,17 +117,22 @@ npm run deploy:wp-clients
 
 ## Local Dominator grid export (Research automation)
 
-Forge **Research** runs `POST /api/local-dominator/export-grid`, which spawns Node + Puppeteer on the **WordPress host** (same requirement as the Google Maps screenshot scraper).
+Forge **Research** calls `POST /api/local-dominator/export-grid`. Puppeteer runs on the **Vite host**, not inside the WordPress container. PHP `proc_open` and GitHub Actions export paths are gone. Hitting WordPress directly returns `LD_EXPORT_WORKER_NOT_CONFIGURED` until a remote worker is wired.
+
+Full contract: [Local Dominator export](api/local-dominator/overview.md).
 
 Local staging:
 
-1. Run `npm run setup:local-dominator` (creates `.env.localdominator`, wires Node export paths into app secrets).
+1. Run `npm run setup:local-dominator` (creates `.env.localdominator`, checks the Research recipe and Puppeteer).
 2. Edit `.env.localdominator` with your Local Dominator login.
-3. Run `npm run sync:local-wp` so the **Research** recipe (25 total) is copied into the WP container.
+3. Run `npm run sync:local-wp` so the Research recipe is copied into the WP container.
 4. Optional CLI smoke test: `npm run setup:local-dominator:smoke` or `npm run localdominator:export:json`.
-5. Install **Local Dominator grid export** in Pulse Forge, click **Execute**, then confirm the CSV on the automation **Archive** tab.
+5. `npm run dev:local`, install **Local Dominator grid export** in Pulse Forge → Agents, click **Execute**, then confirm the CSV on the automation **Archive** tab.
 
-If Node/Puppeteer is unavailable inside the WP container, the API returns `LD_EXPORT_EXEC_BLOCKED`.
+| Code | Meaning |
+| --- | --- |
+| `LD_EXPORT_WORKER_NOT_CONFIGURED` | Request reached the PHP stub (not the Vite host plugin) |
+| `LD_EXPORT_EXEC_BLOCKED` | Host plugin ran; export script missing or Puppeteer failed |
 
 ## Troubleshooting
 
@@ -156,7 +171,11 @@ Local dev uses `http://localhost:8080` proxying to HTTPS WordPress. Vite rewrite
 
 ### Login uses wrong backend
 
-Use `npm run dev` (or `dev:local`) for local WordPress on `neopulse.local`. Use `npm run dev:remote` when you intentionally want the live neodigital API instead.
+Use `npm run dev` or `npm run dev:local` (same script) for WordPress on `neopulse.local`. Use `npm run dev:remote` when you intentionally want the live neodigital API instead.
+
+### Local Dominator export returns worker-not-configured
+
+The PHP route is a stub. Call export-grid through Vite on **http://localhost:8080** (`npm run dev:local`). Calling `https://neopulse.local/api/local-dominator/export-grid` always returns `LD_EXPORT_WORKER_NOT_CONFIGURED`. If localhost still returns that code, the custom `/api` proxy forwarded the POST to WordPress before the host interceptor. Use the CLI (`npm run localdominator:export:json`) to confirm credentials while that path is investigated.
 
 ### Self-signed certificate warnings
 
@@ -170,4 +189,8 @@ Expected for `neopulse.local`. Accept once in the browser or use `-k` with curl.
 - [`scripts/sync-local-wp-plugins.ps1`](../scripts/sync-local-wp-plugins.ps1)
 - [`scripts/setup-local-wp.ps1`](../scripts/setup-local-wp.ps1)
 - [`scripts/generate-local-app-secrets.mjs`](../scripts/generate-local-app-secrets.mjs)
-- [`vite.config.ts`](../vite.config.ts) (reads `VITE_LOCAL_API_TARGET`)
+- [`vite.config.ts`](../vite.config.ts) (local proxy plugins when the API target is `.local`)
+- [`scripts/vite-local-wp-api-proxy-plugin.mjs`](../scripts/vite-local-wp-api-proxy-plugin.mjs)
+- [`scripts/vite-local-dominator-export-plugin.mjs`](../scripts/vite-local-dominator-export-plugin.mjs)
+- [Local Dominator export](api/local-dominator/overview.md)
+- [Pulse Forge](api/pulse-forge/overview.md)
