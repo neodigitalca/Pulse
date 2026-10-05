@@ -27,7 +27,7 @@ Client WordPress sites (WP Engine) are a **fourth track**: deploy `neo-pulse-wp`
 flowchart TB
   subgraph local [Local branch path]
     Edit["Edit src/ + wordpress-plugins/"]
-    DevLocal["npm run dev:local"]
+    DevLocal["PULSE_LOCAL_WP=1 npm run pulse:local"]
     Vite["localhost:8080"]
     Proxy["Vite /api proxy"]
     WPLocal["neopulse.local WP"]
@@ -62,7 +62,7 @@ flowchart TB
 
 ---
 
-## Path A — Local offline (default for feature work)
+## Path A — Local offline (opt-in WordPress)
 
 ### When to use
 
@@ -94,8 +94,11 @@ Adjust the `B:\Flowbie One` path if your clone lives elsewhere.
 
 ### Daily loop
 
+`npm run dev`, `dev:local`, and `pulse:local` are the same entry (`scripts/start-pulse-local.cjs`). They **do not** send `/api` to `neopulse.local` unless `PULSE_LOCAL_WP` is set and the local API probe succeeds. See [local-wp-staging-dev.md](local-wp-staging-dev.md).
+
 ```powershell
-npm run dev:local
+$env:PULSE_LOCAL_WP = "1"
+npm run pulse:local
 ```
 
 Open **http://localhost:8080**. Do **not** use the WP Admin **NEO Pulse App** menu for the UI locally; it embeds `https://neopulse.local/neo-pulse/`, which has no built SPA. The dev UI is always Vite on port 8080.
@@ -131,13 +134,15 @@ curl.exe -k -X POST "https://neopulse.local/api/auth/setup-admin" `
 
 ---
 
-## Path B — Live API dev (optional)
+## Path B — Live API dev (default)
 
 ```powershell
-npm run dev
+npm run pulse:local
 ```
 
-Vite proxies `/api` to **https://neodigital.ca**. Use when you only change React and need live production API data.
+Same as `npm run dev` and `npm run dev:local`. Vite proxies `/api` to **https://neodigital.ca** unless `PULSE_LOCAL_WP=1` and local WP answers. Use this when you only change React and need live production API data.
+
+`npm run dev:remote` pins production even if `PULSE_LOCAL_WP` is set.
 
 Do **not** use this path to validate PHP or offline API changes.
 
@@ -220,8 +225,9 @@ Requires `wordpress-plugins/Customer List/SFTP Users_Clients List.csv` and `npm 
 
 | Goal | Path | Command |
 |------|------|---------|
-| Build a feature offline | A | `npm run dev:local` |
-| Quick UI tweak against live data | B | `npm run dev` |
+| Build a feature offline | A | `$env:PULSE_LOCAL_WP=1; npm run pulse:local` |
+| Quick UI tweak against live data | B | `npm run pulse:local` (default) |
+| Pin production API | B | `npm run dev:remote` |
 | Ship app to neodigital.ca | C | `npm run deploy:neodigital-app` |
 | Ship plugin to one client | D | `npm run deploy:wp-clients` |
 | Ship plugin to all 1stg staging hosts | D | `npm run deploy:wp-staging` |
@@ -233,7 +239,7 @@ Requires `wordpress-plugins/Customer List/SFTP Users_Clients List.csv` and `npm 
 ## End-to-end example (one feature)
 
 1. **Branch (optional):** `git checkout -b feature/my-change`
-2. **Local:** `npm run dev:local` → implement in `src/` and/or plugins → verify on `localhost:8080`
+2. **Local:** `PULSE_LOCAL_WP=1 npm run pulse:local` (or default `npm run pulse:local` for live API) → implement in `src/` and/or plugins → verify on `localhost:8080`
 3. **Commit:** `git add …` → `git commit` → `git push`
 4. **Production:** `npm run deploy:neodigital-app` → `npm run smoke:neo-pulse`
 5. **Clients (if plugin changed):** `npm run deploy:wp-staging` on 1stg first, then `deploy:wp-clients` when approved
@@ -248,8 +254,8 @@ Typical timing: local iteration seconds to minutes; production deploy minutes (b
 |--------|------|
 | `setup:local-wp` | A — one-time local stack |
 | `sync:local-wp` | A — plugins + secrets |
-| `dev:local` | A — Vite + `/api` → neopulse.local |
-| `dev` | B — Vite + `/api` → neodigital.ca |
+| `pulse:local` / `dev` / `dev:local` | B by default; A when `PULSE_LOCAL_WP=1` and local WP is up |
+| `dev:remote` | B — Vite + `/api` pinned to neodigital.ca |
 | `embed:neo-pulse-wp-secrets` | A, D — writes `neo-pulse-wp/.env` from repo `.env` |
 | `generate:local-app-secrets` | A — writes local `neo-pulse-app-secrets.php` |
 | `build:neodigital-app` | C — production SPA build |
@@ -278,8 +284,8 @@ Typical timing: local iteration seconds to minutes; production deploy minutes (b
 
 | Symptom | Likely path | Fix |
 |---------|-------------|-----|
-| Blank page / `127.0.0.1:3001` errors | A | Use `npm run dev:local`, not `dev` |
-| Login "Something went wrong" | A | Hard refresh; clear `neo-pulse_device_auth`; confirm `dev:local` |
+| Login hits neodigital instead of neopulse.local | A | Set `PULSE_LOCAL_WP=1` and confirm the start banner says `API: local WordPress` |
+| Login "Something went wrong" | A | Hard refresh; clear `neo-pulse_device_auth`; confirm local WP probe succeeded |
 | WP Admin NEO Pulse App shows 404 | A | Expected; use `localhost:8080` |
 | HTTPS red in WP Staging Desktop | A | Fix hosts to `127.3.2.1 neopulse.local`; test in browser |
 | Plugins missing in container | A | `docker cp` block above |
@@ -294,7 +300,9 @@ More detail: [local-wp-staging-dev.md](local-wp-staging-dev.md), [deploy-neo-pul
 
 - [`scripts/setup-local-wp.ps1`](../scripts/setup-local-wp.ps1)
 - [`scripts/sync-local-wp-plugins.ps1`](../scripts/sync-local-wp-plugins.ps1)
-- [`scripts/dev-local.cjs`](../scripts/dev-local.cjs)
+- [`scripts/start-pulse-local.cjs`](../scripts/start-pulse-local.cjs)
+- [`scripts/resolve-pulse-dev-api.cjs`](../scripts/resolve-pulse-dev-api.cjs)
+- [`scripts/dev-remote.cjs`](../scripts/dev-remote.cjs)
 - [`scripts/generate-local-app-secrets.mjs`](../scripts/generate-local-app-secrets.mjs)
 - [`scripts/fix-wp-staging-hosts.ps1`](../scripts/fix-wp-staging-hosts.ps1)
 - [`wordpress-plugins/deploy-neo-pulse-app.js`](../wordpress-plugins/deploy-neo-pulse-app.js)

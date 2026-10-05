@@ -6,7 +6,7 @@
     "Run manually from Forge Execute (no recurring schedule in v1).",
     "Logs into Local Dominator, opens the configured business grid, and exports CSV.",
     "Default v1 target: Advance Blinds & Drapery / blinds near me.",
-    "Requires Node and Puppeteer on the WordPress host (same constraint as maps screenshot)."
+    "PHP POST /api/local-dominator/export-grid is a stub (LD_EXPORT_WORKER_NOT_CONFIGURED). Use npm run localdominator:export:json on the Vite host until a remote worker is wired."
   ],
   "category": "research",
   "verticals": [

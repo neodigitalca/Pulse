@@ -17,7 +17,7 @@ Backend Assist registers tools in `class-neo-pulse-wp-backend-assist-registry.ph
 | `get_search_insights` | Site search popular and zero-result queries | |
 | `get_overseer_summary` | Behavioral analytics (sessions, pageviews, engagement) | |
 | `list_overseer_tasks` | Open Overseer actionable tasks | |
-| `get_site_inventory` | Cached full-site content inventory | Optional post_type, query, limit |
+| `get_site_inventory` | Cached full-site content inventory | Calls `warm(true)` then `get_items` (`Neo_Pulse_Wp_Site_Inventory`). Optional post_type, query, limit. Not the Pulse SPA `wordpress-site-cache.ts` map. |
 | `analyze_content_gaps` | Blog inventory vs chat gaps for new content ideas | Not for duplicate-topic suggestions |
 | `grade_post_library_seo` | Full post library SEO grading | On-page signals |
 | `get_gsc_context` | GSC keyword/query data for post or site | |

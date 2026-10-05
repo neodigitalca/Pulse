@@ -111,3 +111,5 @@ PHP merges incoming `result` and nested `checkpoint` with existing JSON on each 
 
 - [Recipes](agent-runs/recipes.md)
 - [Task Manager execute](agent-runs/task-manager-execute.md)
+- [Pulse Forge workflows](../pulse-forge/workflows.md) (separate pending queue + browser graph walker)
+- [Local Dominator](../local-dominator/overview.md)

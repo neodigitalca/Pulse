@@ -62,6 +62,17 @@ Build mode POST body accepts the same context fields as the stream: `target_scop
 | GET | `/neo-pulse/v1/chat/site-inventory` | Warm cache, return count |
 | GET | `/neo-pulse/v1/chat/site-inventory?format=csv&include_drafts=1` | CSV export (God Mode toolbar) |
 
+Query params `query`, `post_type`, `limit`, and `sort` return slim `items` plus counts instead of the warm-only summary.
+
+### Two caches (do not mix)
+
+| Cache | Where | What it stores | Clear |
+| --- | --- | --- | --- |
+| WP site inventory | `Neo_Pulse_Wp_Site_Inventory` (`neo-pulse_site_inventory_meta_v1`) | Full-site post list for God Mode / Backend Assist | No flush API. `warm()` rebuilds and `store_meta()`. |
+| Pulse SPA site cache | `src/lib/wordpress-site-cache.ts` | In-memory `Map<siteId, …>` for link/search helpers in the app | `clearSiteCache(siteId)` / `clearAllCaches()` |
+
+God Mode `get_site_inventory` and the REST route use the **WP** cache only. Pulse Generator inventory (`POST /api/wordpress/get-site-inventory-bulk`) is a third path in `neo-pulse-app`.
+
 ## Widget config URLs
 
 Localized in `neo-pulseChatConfig`:
