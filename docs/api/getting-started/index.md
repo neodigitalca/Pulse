@@ -24,7 +24,10 @@ Browser clients must send `credentials: "include"` on every `fetch`. Server-side
 | Environment | Base |
 | --- | --- |
 | Production | `https://neodigital.ca/api` |
-| Local dev (Vite proxy) | `/api` (proxied to neodigital.ca) |
+| Local Vite (default) | `/api` proxied to neodigital.ca |
+| Local Vite + `PULSE_LOCAL_WP=1` | `/api` proxied to `neopulse.local` when that API answers |
+
+`npm run pulse:local` (`dev` / `dev:local` / `start`) is the canonical UI start. Local WordPress is opt-in. See [Local WP staging](../../local-wp-staging-dev.md).
 
 All paths in this reference are relative to `/api`. Example: `POST /api/auth/login` means `POST https://neodigital.ca/api/auth/login`.
 
@@ -53,5 +56,7 @@ The API is organized by prefix: `auth`, `teams`, `wordpress`, `gsc`, `dataforseo
 - [Teams](../teams/overview) — agencies, invites, RBAC
 - [WordPress](../wordpress/overview) — site inventory and publishing
 - [Integrations](../integrations/overview) — manager cloud settings and properties
+- [Pulse Forge](../pulse-forge/overview): recipes vs workflow graphs
+- [Local Dominator](../local-dominator/overview): grid export stub and CLI
 
 Use the sidebar to browse every endpoint by topic.

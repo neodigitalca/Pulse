@@ -71,6 +71,33 @@
       ]
     },
     {
+      "id": "pulse-forge",
+      "label": "Pulse Forge",
+      "items": [
+        {
+          "slug": "pulse-forge/overview",
+          "title": "Overview",
+          "order": 0
+        },
+        {
+          "slug": "pulse-forge/workflows",
+          "title": "Workflows",
+          "order": 10
+        }
+      ]
+    },
+    {
+      "id": "local-dominator",
+      "label": "Local Dominator",
+      "items": [
+        {
+          "slug": "local-dominator/overview",
+          "title": "Overview",
+          "order": 0
+        }
+      ]
+    },
+    {
       "id": "auth",
       "label": "Authentication",
       "items": [

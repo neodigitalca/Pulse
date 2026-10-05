@@ -13,6 +13,7 @@ Recipes map to existing client harnesses. Registration happens in the SPA (`regi
 | --- | --- | --- |
 | `overview_pages_meta_batch` | Pages bucket meta batch | Overview AI all-meta harness (pages sitemap) |
 | `content_optimizer_bulk` | Content optimization batch | Content Optimizer bulk or task `clientRunContract` |
+| `local_dominator_export` | Local Dominator grid CSV | `runLocalDominatorExportDirectHarness` / task harness. HTTP export is a PHP stub; see [Local Dominator](../local-dominator/overview.md). |
 
 Task executions with `executionKind: content_optimizer` dispatch `content_optimizer_bulk` with `plan.clientRunContract` from `POST /api/teams/{id}/tasks/tasks/{taskId}/execute`.
 
