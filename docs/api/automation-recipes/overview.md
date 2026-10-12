@@ -61,6 +61,8 @@ Calendar editorial recipes (`monthly-post-creator`, `monthly-3-posts-editorial`)
 
 **Teams → Pulse Forge** lists the recipe library, installed automations, and the **Automation Planner** (WHEN/THEN visual editor plus JSON tab). Tasks keeps manual projects and My Tasks only.
 
+Graph workflows (nodes/edges, runs, library) are a separate API: [Pulse Forge workflows](../pulse-forge/workflows).
+
 ## Recipe JSON shape
 
 ```json
